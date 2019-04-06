@@ -10,9 +10,11 @@ class TestImageObj(unittest.TestCase):
 
     def test_ImageObjConstructorTypeError(self):
         """
-        Test that constructor will only accept numpy array
+        Test that constructor will only 
+        accept numpy array
         """
         invalid_types = [set(), dict(), 1, [4,15,6]]
         for inv_arg in invalid_types:
-            self.assertRaises(TypeError, ImageObj.ImageObj, inv_arg)
+            self.assertRaises(
+                TypeError, ImageObj.ImageObj, inv_arg)
 
