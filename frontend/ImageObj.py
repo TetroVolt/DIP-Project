@@ -1,5 +1,6 @@
 
 import numpy as np
+import tkinter as TK
 
 class ImageObj:
     """
@@ -8,15 +9,30 @@ class ImageObj:
     the current image being worked on
     """
 
-    def __init__(self, img_npy: np.array):
+    def __init__(self, img_npy:np.array):
         """
             parameters
         """
         if not(isinstance(img_npy, np.array)):
             raise TypeError("img_npy should be of type np.array")
-        
-        print(img_npy.dtype)
 
+        # TODO check for dtype
+
+        self.__original_img = img_npy
+        self.__scale_x, self.__scale_y = 1., 1.
+        self.__height, self.__width = self.__original_img.shape
+
+    def scale_XY(self, fx=1., fy=1.):
+        """
+        meant for scaling for viewing purposes only
+        uses nearest neighbor to scale image
+        """
+        
+        pass
+
+    def render(self, canvas: TK.Canvas):
+        canvas.create_image()
+        pass
 
 
     
