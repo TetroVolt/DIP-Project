@@ -4,7 +4,9 @@ if __name__=='__main__':
     from tkinter import Tk
     import frontend.frontend as frontend
     root = Tk()
+    root.title('Wednesday')
+    
     app = frontend.App(root)
     root.mainloop()
     root.destroy()
-
+    
