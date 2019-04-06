@@ -13,6 +13,9 @@ class Library:
         else:
             raise TypeError("source argument must be of type str")    
 
+    def __use_library(self):
+        raise NotImplementedError()
+        
     def __use_cv2(self):
         import cv2 as cv
         self.resize = cv.resize
