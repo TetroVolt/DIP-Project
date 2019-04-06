@@ -22,3 +22,28 @@ class LibraryTest(unittest.TestCase):
         for arg in test_args:
             self.assertRaises(ValueError, Library, arg) 
         
+    def testLibraryAttributesOpenCV(self):
+        attributes = [
+            "resize",
+            "warpAffine",
+            "getRotationMatrix2D", 
+            "getAffineTransform", 
+            "getPerspectiveTransform", 
+            "warpPerspective",
+            ]
+        lib_opencv = Library("opencv")
+        for attr in attributes:
+            self.assertTrue(hasattr(lib_opencv, attr), "source 'opencv' has no attr: " + attr)
+
+    def testLibraryAttributesLibrary(self):
+        attributes = [
+            "resize",
+            "warpAffine",
+            "getRotationMatrix2D", 
+            "getAffineTransform", 
+            "getPerspectiveTransform", 
+            "warpPerspective",
+            ]
+        lib_opencv = Library("library")
+        for attr in attributes:
+            self.assertTrue(hasattr(lib_opencv, attr), "source 'library' has no attr: " + attr)

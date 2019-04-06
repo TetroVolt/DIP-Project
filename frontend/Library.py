@@ -14,14 +14,21 @@ class Library:
             raise TypeError("source argument must be of type str")    
 
     def __use_library(self):
-        raise NotImplementedError()
-        
+        import sys
+        sys.path.append("../library")
+
+        from library import library
+        for module_name, module in library.getExports().items():
+            self.__setattr__(module_name, module)
+
+
     def __use_cv2(self):
         import cv2 as cv
         self.resize = cv.resize
         self.warpAffine = cv.warpAffine
-        self.getRotationMatrix = cv.getRotationMatrix2D
+        self.getRotationMatrix2D = cv.getRotationMatrix2D
         self.getAffineTransform = cv.getAffineTransform
         self.getPerspectiveTransform = cv.getPerspectiveTransform
         self.warpPerspective = cv.warpPerspective
 
+TransformFunctions = Library('opencv')
