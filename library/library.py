@@ -1,21 +1,21 @@
 
-def resize(src, dsize, fx, fy, interpolation):
-    pass
+def resize(src, dsize, fx=None, fy=None, interpolation=0):
+    raise NotImplementedError()
 
 def warpAffine(src, M, dsize, dst, flags, borderMode, borderValue):
-    pass
+    raise NotImplementedError()
 
 def getRotationMatrix2D(center, angle, scale):
-    pass
+    raise NotImplementedError()
 
 def getAffineTransform(src, dst):
-    pass
+    raise NotImplementedError()
 
 def getPerspectiveTransform(src, dst, solveMethod):
-    pass
+    raise NotImplementedError()
 
 def warpPerspective(src, M, dsize, dst, flags, borderMode, borderValue):
-    pass
+    raise NotImplementedError()
 
 def getExports():
     exports = {
