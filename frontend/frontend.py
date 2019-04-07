@@ -17,13 +17,12 @@ class App:
         self.zoomInButton.grid(column=0)
 
         self.zoomOutButton = ttk.Button(
-            self.tool_box, 
+            self.tool_box,
             text="Zoom-",
             command=self.zoomOutPressed) # zoom in add zoom out
         self.zoomOutButton.grid(column=0)
 
         self.photo = TK.PhotoImage(file='./kennysmall.gif')
-        #self.photoButton = ttk.Button(master, image=self.photo, padding=80)
         self.photoLabel = TK.Label(master, image=self.photo, padx=80, pady=80)
         self.photoLabel.grid(row=0,column=1)
 
