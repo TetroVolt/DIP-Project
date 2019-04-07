@@ -1,13 +1,19 @@
-def resize():
+
+def resize(src, dsize, fx, fy, interpolation):
     pass
+
 def warpAffine():
     pass
+
 def getRotationMatrix2D():
     pass
+
 def getAffineTransform():
     pass
+
 def getPerspectiveTransform():
     pass
+
 def warpPerspective():
     pass
 

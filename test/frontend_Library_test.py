@@ -10,7 +10,7 @@ class LibraryTest(unittest.TestCase):
         lib = Library()
     
     def testLibraryConstructorTypeError(self):
-        test_args = [1,1., [], (), {}, set(), None]
+        test_args = [1, 0.0,  float, [], (), dict, set(), None]
         for arg in test_args:
             self.assertRaises(TypeError,Library,arg)
     
@@ -39,9 +39,9 @@ class LibraryTest(unittest.TestCase):
         attributes = [
             "resize",
             "warpAffine",
-            "getRotationMatrix2D", 
-            "getAffineTransform", 
-            "getPerspectiveTransform", 
+            "getRotationMatrix2D",
+            "getAffineTransform",
+            "getPerspectiveTransform",
             "warpPerspective",
             ]
         lib_opencv = Library("library")
