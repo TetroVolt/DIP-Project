@@ -2,19 +2,19 @@
 def resize(src, dsize, fx, fy, interpolation):
     pass
 
-def warpAffine():
+def warpAffine(src, M, dsize, dst, flags, borderMode, borderValue):
     pass
 
-def getRotationMatrix2D():
+def getRotationMatrix2D(center, angle, scale):
     pass
 
-def getAffineTransform():
+def getAffineTransform(src, dst):
     pass
 
-def getPerspectiveTransform():
+def getPerspectiveTransform(src, dst, solveMethod):
     pass
 
-def warpPerspective():
+def warpPerspective(src, M, dsize, dst, flags, borderMode, borderValue):
     pass
 
 def getExports():
