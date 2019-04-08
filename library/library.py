@@ -39,27 +39,8 @@ def getRotationMatrix2D(center, angle, scale):
 def getAffineTransform(src, dst):
     raise NotImplementedError()
 
-def getPerspectiveTransform(src, dst, solveMethod = None):
-    a = np.zeros((8, 8))
-    b = np.zeros((8))
-    for i in range(4):
-        a[i][0] = a[i + 4][3] = srcPoints[i][0]
-        a[i][1] = a[i + 4][4] = srcPoints[i][1]
-        a[i][2] = a[i + 4][5] = 1
-        a[i][3] = a[i][4] = a[i][5] = 0
-        a[i + 4][0] = a[i + 4][1] = a[1 + 4][2] = 0
-        a[i][6] = -srcPoints[i][0] * dstPoints[i][0]
-        a[i][7] = -srcPoints[i][1] * dstPoints[i][0]
-        a[i + 4][6] = -srcPoints[i][0] * dstPoints[i][1]
-        a[i + 4][7] = -srcPoints[i][1] * dstPoints[i][1]
-        b[i] = dstPoints[i][0]
-        b[i + 4] = dstPoints[i][1]
-
-    M = np.linalg.solve(a, b)
-    M.resize((9,), refcheck = False)
-    M[8] = 1
-    return M.reshape((3, 3))
-    #raise NotImplementedError()
+def getPerspectiveTransform(src, dst, solveMethod = None):    
+    raise NotImplementedError()
 
 def warpPerspective(src, M, dsize, dst, flags, borderMode, borderValue):
     raise NotImplementedError()
