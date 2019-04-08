@@ -1,6 +1,7 @@
 
 import tkinter as TK
-from ImageObj import ImageObj
+from .ImageObj import ImageObj
+import numpy as np
 
 class ImageViewer:
     """ 

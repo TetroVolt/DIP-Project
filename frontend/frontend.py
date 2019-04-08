@@ -13,30 +13,40 @@ class App:
         self.zoomInButton = ttk.Button(
             self.tool_box, 
             text="Zoom+",
-            command=self.zoomInPressed) # zoom in add zoom out
+            command=self.zoomInButtonPressed)
         self.zoomInButton.grid(column=0)
 
         self.zoomOutButton = ttk.Button(
             self.tool_box,
             text="Zoom-",
-            command=self.zoomOutPressed) # zoom in add zoom out
+            command=self.zoomOutButtonPressed)
         self.zoomOutButton.grid(column=0)
+
+        self.resizeButton = ttk.Button(
+            self.tool_box,
+            text="Resize",
+            command=self.resizeButtonPressed)
+        self.resizeButton.grid(column=0)
+
+        self.rotateButton = ttk.Button(
+            self.tool_box,
+            text="Rotate",
+            command=self.rotateButtonPressed)
+        self.rotateButton.grid(column=0)
 
         self.photo = TK.PhotoImage(file='./kennysmall.gif')
         self.photoLabel = TK.Label(master, image=self.photo, padx=80, pady=80)
         self.photoLabel.grid(row=0,column=1)
 
-    def zoomInPressed(self):
-        """
-            gets called when zoom_button is pressed
-        """
+    def zoomInButtonPressed(self):
         print("Zoom In Button pressed")
 
-
-    def zoomOutPressed(self):
-        """
-            gets called when zoom_button is pressed
-        """
+    def zoomOutButtonPressed(self):
         print("Zoom Out Button pressed")
 
-    
+    def resizeButtonPressed(self):
+        print("resize Button pressed")
+
+    def rotateButtonPressed(self):
+        print("rotate Button pressed")
+
