@@ -1,8 +1,9 @@
+import numpy as np
 
 def resize(src, dsize, fx=None, fy=None, interpolation=0):
     raise NotImplementedError()
 
-def warpAffine(src, M, dsize, dst, flags, borderMode, borderValue):
+def warp_affine(src, M, dsize, dst, flags, borderMode, borderValue):
     output = np.zeros((height, width, 3), dtype = np.uint8)
     input_height, input_width = image.shape[:2]
     for u in range(width):
@@ -17,7 +18,7 @@ def warpAffine(src, M, dsize, dst, flags, borderMode, borderValue):
     return output
     #raise NotImplementedError()
 
-def getRotationMatrix2D(center, angle, scale):
+def get_rotation_matrix_2D(center, angle, scale):
     width, height = image.shape[:2]
     cx = width / 2
     cy = height / 2
@@ -32,14 +33,14 @@ def getRotationMatrix2D(center, angle, scale):
     newWidth = int((height * sin) + (width * cos))
     newHeight = int((height * cos) + (width * sin))
 
-    matrix[0, 2] += cx - (newWidth / 2) 
+    matrix[0, 2] += cx - (newWidth / 2)
     matrix[1, 2] += cy - (newHeight / 2)
     #raise NotImplementedError()
 
-def getAffineTransform(src, dst):
+def get_shear_transform(src, dst):
     raise NotImplementedError()
 
-def getPerspectiveTransform(src, dst, solveMethod = None):    
+def getPerspectiveTransform(src, dst, solveMethod = None):
     raise NotImplementedError()
 
 def warpPerspective(src, M, dsize, dst, flags, borderMode, borderValue):
@@ -49,9 +50,9 @@ def getExports():
     exports = {
         "resize": resize,
         "warpAffine" : warpAffine,
-        "getRotationMatrix2D": getRotationMatrix2D, 
-        "getAffineTransform": getAffineTransform, 
-        "getPerspectiveTransform": getPerspectiveTransform, 
+        "getRotationMatrix2D": getRotationMatrix2D,
+        "getAffineTransform": getAffineTransform,
+        "getPerspectiveTransform": getPerspectiveTransform,
         "warpPerspective": warpPerspective,
     }
 
