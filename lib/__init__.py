@@ -40,7 +40,29 @@ def shear_transform(src, dst):
     raise NotImplementedError()
 
 def perspective_transform(src, dst, solveMethod = None):
-    raise NotImplementedError()
+    #if srcPoints.shape != (4, 2)   or dstPoints.shape != (4, 2):
+		#raise ValueError("There must be four source points and four destination points")
+
+	m = np.zeros((8, 8))
+	n = np.zeros((8))
+	for i in range(4):
+		m[i][0] = m[i + 4][3] = srcPoints[i][0]
+		m[i][1] = m[i + 4][4] = srcPoints[i][1]
+		m[i][2] = m[i + 4][5] = 1
+		m[i][3] = m[i][4] = a[i][5] = 0
+		m[i + 4][0] = m[i + 4][1] = m[1 + 4][2] = 0
+		m[i][6] = -srcPoints[i][0] * dstPoints[i][0]
+		m[i][7] = -srcPoints[i][1] * dstPoints[i][0]
+		m[i + 4][6] = -srcPoints[i][0] * dstPoints[i][1]
+		m[i + 4][7] = -srcPoints[i][1] * dstPoints[i][1]
+		n[i] = dstPoints[i][0]
+		n[i + 4] = dstPoints[i][1]
+
+	M = np.linalg.solve(m, n)
+	M.resize((9,), refcheck = False)
+	M[8] = 1
+	return M.reshape((3, 3))
+    #raise NotImplementedError()
 
 def warp_perspective(src, M, dsize, dst, flags, borderMode, borderValue):
     raise NotImplementedError()
