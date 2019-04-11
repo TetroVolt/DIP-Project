@@ -2,6 +2,8 @@
 import tkinter as TK
 import tkinter.filedialog
 from tkinter import ttk
+import PIL.Image
+import PIL.ImageTk
 
 # import the Transformations library
 from .Library import TransformFunctions as lib
@@ -12,6 +14,13 @@ class App:
         self.tool_box = ttk.Frame(master, padding=20)
         self.tool_box.grid()
 
+        self.__initButtons()
+
+        self.photo = TK.PhotoImage()
+        self.photoLabel = TK.Label(master, image=self.photo, padx=80, pady=80)
+        self.photoLabel.grid(row=0,column=1)
+
+    def __initButtons(self):
         self.openFileButton = ttk.Button(
             self.tool_box, 
             text="open file",
@@ -42,14 +51,10 @@ class App:
             command=self.rotateButtonPressed)
         self.rotateButton.grid(column=0)
 
-        self.photo = TK.PhotoImage()
-        self.photoLabel = TK.Label(master, image=self.photo, padx=80, pady=80)
-        self.photoLabel.grid(row=0,column=1)
-
     def openFileButtonPressed(self):
         filename =  TK.filedialog.askopenfilename(initialdir = "./",title = "Select file",filetypes = (("jpeg files","*.jpg"),("all files","*.*")))
         if filename:
-            self.photo = TK.PhotoImage(file=filename)
+            self.photo = PIL.ImageTk.PhotoImage(PIL.Image.open(filename))
             self.photoLabel = TK.Label(self.master, image=self.photo, padx=80, pady=80)
             self.photoLabel.grid(row=0,column=1)
 
