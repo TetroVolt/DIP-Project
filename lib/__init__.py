@@ -1,6 +1,5 @@
 import numpy as np
 
-
 def resize(src, dsize, fx=None, fy=None, interpolation=0):
     raise NotImplementedError()
 
@@ -17,7 +16,6 @@ def warp_affine(src, M, dsize, dst, flags, borderMode, borderValue):
                 output[v, u] = out
 
     return output
-    #raise NotImplementedError()
 
 def get_rotation_matrix_2D(center, angle, scale):
     width, height = image.shape[:2]
@@ -38,46 +36,23 @@ def get_rotation_matrix_2D(center, angle, scale):
     matrix[1, 2] += cy - (newHeight / 2)
     #raise NotImplementedError()
 
-def get_shear_transform(src, dst):
+def shear_transform(src, dst):
     raise NotImplementedError()
 
-def getPerspectiveTransform(src, dst, solveMethod = None):
-
-    #if srcPoints.shape != (4, 2)   or dstPoints.shape != (4, 2):
-		#raise ValueError("There must be four source points and four destination points")
-
-	m = np.zeros((8, 8))
-	n = np.zeros((8))
-	for i in range(4):
-		m[i][0] = m[i + 4][3] = srcPoints[i][0]
-		m[i][1] = m[i + 4][4] = srcPoints[i][1]
-		m[i][2] = m[i + 4][5] = 1
-		m[i][3] = m[i][4] = a[i][5] = 0
-		m[i + 4][0] = m[i + 4][1] = m[1 + 4][2] = 0
-		m[i][6] = -srcPoints[i][0] * dstPoints[i][0]
-		m[i][7] = -srcPoints[i][1] * dstPoints[i][0]
-		m[i + 4][6] = -srcPoints[i][0] * dstPoints[i][1]
-		m[i + 4][7] = -srcPoints[i][1] * dstPoints[i][1]
-		n[i] = dstPoints[i][0]
-		n[i + 4] = dstPoints[i][1]
-
-	M = np.linalg.solve(m, n)
-	M.resize((9,), refcheck = False)
-	M[8] = 1
-	return M.reshape((3, 3))
-    #raise NotImplementedError()
-
-def warpPerspective(src, M, dsize, dst, flags, borderMode, borderValue):
+def perspective_transform(src, dst, solveMethod = None):
     raise NotImplementedError()
 
-def getExports():
+def warp_perspective(src, M, dsize, dst, flags, borderMode, borderValue):
+    raise NotImplementedError()
+
+def get_exports():
     exports = {
         "resize": resize,
-        "warpAffine" : warpAffine,
-        "getRotationMatrix2D": getRotationMatrix2D,
-        "getAffineTransform": getAffineTransform,
-        "getPerspectiveTransform": getPerspectiveTransform,
-        "warpPerspective": warpPerspective,
+        "warp_affine" : warp_affine,
+        "get_rotation_matrix_2D": get_rotation_matrix_2D,
+        "shear_transform": shear_transform,
+        "perspective_transform": perspective_transform,
+        "warp_perspective": warp_perspective,
     }
 
     return exports
