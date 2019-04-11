@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def resize(src, dsize, fx=None, fy=None, interpolation=0):
     raise NotImplementedError()
 
