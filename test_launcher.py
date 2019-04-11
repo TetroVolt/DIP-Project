@@ -14,21 +14,27 @@ def exception_handler(exception_type, exception, traceback,
 
 def lib_suite():
     suite = unittest.TestSuite()
-    suite.addTest(LibraryTest('test_resize'))
+    loader = unittest.TestLoader()
+    suite.addTest(loader.loadTestsFromTestCase(LibraryTest))
     return suite
 
 def gui_suite():
-    # TODO
+    # TODO-Add gui
     suite = unittest.TestSuite()
+    loader = unittest.TestLoader()
+    #suite.addTest(loader.loadTestsFromTestCase(GUITest))
     return suite
 
 if __name__ == "__main__":
     if "--debug" in sys.argv or "-d" in sys.argv:
         sys.argv.pop()
         sys.excepthook = exception_handler
-    runner = unittest.TextTestRunner()
+
+    print("\nRunning Tests...\n")
+
+    runner = unittest.TextTestRunner(verbosity=3)
     runner.run(lib_suite())
-    runner = unittest.TextTestRunner()
     runner.run(gui_suite())
-    unittest.main(verbosity=2)
+
+    print("\nDone!\n")
 
