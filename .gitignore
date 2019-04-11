@@ -50,6 +50,9 @@ coverage.xml
 *.mo
 *.pot
 
+# Vi/Vim:
+*.swp
+
 # Django stuff:
 *.log
 local_settings.py

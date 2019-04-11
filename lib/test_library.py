@@ -19,12 +19,10 @@ class LibraryTest(unittest.TestCase):
 
     def test_warp_affine(self):
         # This needs to be updated once the warp_affine is finished.
-        library.warp_affine(self.input_matrix, 0, 0, 0, 0, 0, 0)
+        lib.warp_affine(self.input_matrix, 0, 0, 0, 0, 0, 0)
 
     def test_rotation_2D(self):
         pass
     def test_shear_transform(self):
-        pass
-    def test_resize(self):
         pass
 
