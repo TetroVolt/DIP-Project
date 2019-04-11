@@ -37,7 +37,23 @@ def get_rotation_matrix_2D(center, angle, scale):
     #raise NotImplementedError()
 
 def shear_transform(src, dst):
-    raise NotImplementedError()
+
+    m = np.zeros((6, 6))
+    n = np.zeros((6))    
+    for i in range(3):
+        j = i * 2
+        k = i * 2 + 1
+        m[j][0] = m[k][3] = srcPoints[i][0]
+        m[j][1] = m[k][4] = srcPoints[i][1]
+        m[i][5] = m[i + 3][5] = m[j][2] = 1
+        m[j][3] = m[j][4] = 0
+        m[k][0] = m[k][1] = m[k][2] = 0
+        n[i*2] = dstPoints[i][0]
+        n[i*2+1] = dstPoints[i][1]
+
+    M = np.linalg.solve(m, n)
+    return M.reshape(2, 3)
+    #raise NotImplementedError()
 
 def perspective_transform(src, dst, solveMethod = None):
     #if srcPoints.shape != (4, 2)   or dstPoints.shape != (4, 2):
