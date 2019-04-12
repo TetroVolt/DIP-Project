@@ -1,6 +1,7 @@
 import unittest
 import sys; sys.path.append('../frontend');
 
+import numpy as np
 from frontend import Library
 Library = Library.Library
 
@@ -47,3 +48,23 @@ class LibraryTest(unittest.TestCase):
         lib_opencv = Library("library")
         for attr in attributes:
             self.assertTrue(hasattr(lib_opencv, attr), "source 'library' has no attr: " + attr)
+
+    def testLibrary_resize(self):
+        libcv = Library('opencv')
+        liblib = Library('library')
+        self.assertTrue(hasattr(libcv, 'resize'))
+        self.assertTrue(hasattr(liblib, 'resize'))
+        
+        args = [np.random.rand(10,10), (20,20)]
+        self.assertEqual(libcv.resize(*args), liblib.resize(*args), "Resize function not equal.")
+
+    def testLibrary_warpAffine(self):
+        pass
+    def testLibrary_getRotationMatrix2D(self):
+        pass
+    def testLibrary_getAffineTransform(self):
+        pass
+    def testLibrary_getPerspectiveTransform(self):
+        pass
+    def testLibrary_warpPerspective(self):
+        pass
