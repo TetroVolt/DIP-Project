@@ -25,7 +25,7 @@ class LibraryTest(unittest.TestCase):
 
     def test_rotation_2D(self):
         #TODO-Add assertions on expected output.
-        lib.get_rotation_matrix_2D(0, 0, 0)
+        lib.get_rotation_matrix_2D(0, 0, 0, 0)
 
     def test_shear_transform(self):
         #TODO-Add assertions on expected output.

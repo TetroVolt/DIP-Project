@@ -1,7 +1,8 @@
 {
   "ExpandedNodes": [
-    ""
+    "",
+    "\\lib"
   ],
-  "SelectedNode": "\\report",
+  "SelectedNode": "\\lib\\test_library.py",
   "PreviewInSolutionExplorer": false
 }
