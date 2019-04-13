@@ -27,7 +27,7 @@ class LibraryTest(unittest.TestCase):
         attributes = [
             "resize",
             "warpAffine",
-            "getRotationMatrix2D", 
+            "getRotationMatrix2D",
             "getAffineTransform", 
             "getPerspectiveTransform", 
             "warpPerspective",
