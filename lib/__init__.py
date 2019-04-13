@@ -1,4 +1,5 @@
 import numpy as np
+import math
 
 def resize(src, dsize, fx=None, fy=None, interpolation=0):
     raise NotImplementedError()
@@ -6,7 +7,7 @@ def resize(src, dsize, fx=None, fy=None, interpolation=0):
 def warp_affine(src, M, dsize, dst, flags, borderMode, borderValue):
     input_height, input_width = src.shape[:2]
     output = np.zeros((input_height, input_width, 3), dtype = np.uint8)
-    
+   
     for u in range(input_width):
         for v in range(input_height):
             x = u * M[0, 0] + v * M[0,1] + M[0,2]
@@ -18,31 +19,23 @@ def warp_affine(src, M, dsize, dst, flags, borderMode, borderValue):
 
     return output
 
-def rotationMatrix(cx, cy, angle, scale):
-	m = scale * np.cos(angle * np.pi/180)
-	n = scale * (np.sin(angle*np.pi/180))
-	u  = (1-m) * cx - n * cy
-	v = n * cx + (1-m) * cy
-	return np.array([[m, n, u], [-n, m, v]])
+def rotationMatrix2D(center: tuple, angle: float, scale: float) -> np.array:
+    """
+    parameters:
+        center: tuple of 2 numbers representing center of rotation
+        angle: specifies amount of counter-clockwise rotation in degrees
+        scale: specifies scaling amount to increase magnitude of unit vectors by
+    """
+    angle = math.radians(angle)
+    center_x, center_y = center
 
-def get_rotation_matrix_2D(cx, cy, angle, scale):
-    #width, height = image.shape[:2]
-    #cx = width / 2
-    #cy = height / 2
+    alpha = scale * math.cos(angle)
+    beta  = scale * math.sin(angle)
+    shift_x = (1-alpha) * center_x - beta * center_y
+    shift_y = beta * center_x + (1-alpha) * center_y
 
-    # calculate rotation matrix
-    matrix = rotationMatrix(cx, cy, int(angle), 1)
-    #print(matrix)
-    cos = np.abs(matrix[0,0])
-    sin = np.abs(matrix[0,1])
-
-    # calculate new height and width
-    newWidth = int((height * sin) + (width * cos))
-    newHeight = int((height * cos) + (width * sin))
-
-    matrix[0, 2] += cx - (newWidth / 2)
-    matrix[1, 2] += cy - (newHeight / 2)
-    #raise NotImplementedError()
+    return np.array([[alpha, beta , shift_x],
+                     [-beta, alpha, shift_y]], dtype=np.float)
 
 def shear_transform(src, dst):
 
