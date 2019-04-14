@@ -1,6 +1,16 @@
 
 import re
 
+class SingletonDecorator:
+    def __init__(self, klass):
+        self.klass = klass
+        self.instance = None
+    
+    def __call__(self, *args, **kwargs):
+        if self.instance is None:
+            self.instance = self.klass(*args, **kwargs)
+        return self.instance
+
 class Library:
     """
     Library Dependency Injection
@@ -22,5 +32,5 @@ class Library:
     def __getattr__(self, attr):
         return self.lib.__getattribute__(attr)
 
-
-TransformFunctions = Library('opencv')
+Library = SingletonDecorator(Library)
+lib = Library('opencv')

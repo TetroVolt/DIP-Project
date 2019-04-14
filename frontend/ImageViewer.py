@@ -1,11 +1,86 @@
 
 import tkinter as TK
-from .ImageObj import ImageObj
 import numpy as np
+from PIL import Image, ImageTk
+from .Library import lib
 
-class ImageViewer:
+class ImageViewer(TK.Label):
+    class ZoomState:
+        def __init__(self):
+            self.hovered = False
+            self.x, self.y = 0, 0
+            self.zoom_amt = 2
+            pass
+
     """ 
     Responsible for rendering the transformed image
     """
-    def __init__(self, img: np.array):
-        self.imgObj = ImageObj(img)
+    def __init__(self, master, filenm: str, *args, **kwargs):
+
+        # ALL THIS BACK AND FORTH FOR GRAYSCALE, MUST BE BETTER WAY
+        self.photo = Image.open(filenm)
+        self.np_photo = np.array(self.photo)
+        self.photo = Image.fromarray(self.np_photo, 'L')
+        self.np_photo = np.array(self.photo)
+        self.photoTK = ImageTk.PhotoImage(self.photo)
+        self.zoom_state = ImageViewer.ZoomState()
+        super().__init__(master, image=self.photoTK, *args, **kwargs)
+
+        self.bind('<Enter>', self.mouse_enter)
+        self.bind('<Leave>', self.mouse_leave)
+        self.bind('<Motion>', self.mouse_motion)
+        self.bind('<Button-1>', self.mouse_btn1)
+        self.bind('<Button-3>', self.mouse_btn3)
+
+    def recalculate_image_bounds(self):
+        """
+        MUST TRY TO DO THIS ASYNCHRONOUSLY
+        """
+        label_h, label_w = self.np_photo.shape
+        zoom_amt = self.zoom_state.zoom_amt
+
+        zoom_w, zoom_h = label_w // zoom_amt, label_h // zoom_amt
+        # check if x, y of mouse is within safe bounds
+        safe_min_x, safe_min_y = zoom_w // 2, zoom_h // 2
+        safe_max_x, safe_max_y = label_w - safe_min_x, label_h - safe_min_y
+
+        X,Y = self.zoom_state.x, self.zoom_state.y
+        X = min(max(safe_min_x, X), safe_max_x)
+        Y = min(max(safe_min_y, Y), safe_max_y)
+        temp =  self.np_photo[Y-safe_min_y:Y+safe_min_y,X-safe_min_x:X+safe_min_x]
+        temp = lib.resize(
+                temp,
+                dsize=(label_w, label_h),
+                interpolation=lib.INTER_NEAREST)
+
+        self.photo = Image.fromarray(temp)
+        self.photoTK = ImageTk.PhotoImage(self.photo)
+        self.configure(image=self.photoTK)
+
+    def mouse_motion(self, event):
+        self.zoom_state.x = event.x
+        self.zoom_state.y = event.y
+        self.recalculate_image_bounds()
+        #print(self.zoom_state, event)
+
+    def mouse_enter(self, event):
+        self.zoom_state.hover = True
+    
+    def mouse_leave(self, event):
+        self.zoom_state.hover = False
+        self.photo = Image.fromarray(self.np_photo)
+        self.photoTK = ImageTk.PhotoImage(self.photo)
+        self.configure(image=self.photoTK)
+
+    def mouse_btn1(self, event):
+        print(self.zoom_state, event)
+        pass
+    
+    def mouse_btn3(self, event):
+        print(self.zoom_state, event)
+        pass
+
+    def rotate(self):
+        print('ImageViewer::rotate')
+
+
