@@ -1,11 +1,25 @@
-import unittest
-import numpy
+import unittest as test
+import numpy as np
 
 import lib
 
-class LibraryTest(unittest.TestCase):
+from typing import Tuple
 
-    def assert_array(self, expected, actual):
+class LibraryTest(test.TestCase):
+
+    def assert_array(self, expected: np.array, actual: np.array) -> Tuple[bool, str]:
+        """
+            Checks that the sizes and contents of the two provided arrays are the same.
+
+            Args:
+                expected (:class: array):  The values we expected to see.
+
+                actual (:class: array):  The values we did received.
+
+            Returns:
+                (:class: tuple):  A tuple containing True/False for if we passed, and if False, a message
+                    clarifying the nature of the failure.
+        """
         expected_size = expected.shape
         actual_size = actual.shape
         if expected_size != actual_size:
@@ -17,11 +31,11 @@ class LibraryTest(unittest.TestCase):
                 actual_val = actual[row, column]
                 if exp_val != actual_val:
                     return (False, "Array contents are different.  Should be {} is {}.".format(exp_val, actual_val))
-        return (True, None)
+        return (True, "")
 
     def setUp(self):
         self.rows, self.columns = (3, 3)
-        self.input_matrix = numpy.zeros((self.rows, self.columns), dtype=numpy.uint8)
+        self.input_matrix = np.zeros((self.rows, self.columns), dtype=np.uint8)
         temp = 1
         # Create an input matrix filled with 1-9
         for row in range(0, self.rows):
@@ -30,7 +44,7 @@ class LibraryTest(unittest.TestCase):
                 temp += 1
 
     def test_resize(self):
-        expected_downsize = numpy.zeros((2, 2), dtype=numpy.uint8)
+        expected_downsize = np.zeros((2, 2), dtype=np.uint8)
         expected_downsize[0] = [4, 4]
         expected_downsize[1] = [5, 6]
         result = lib.resize(self.input_matrix, (2, 2))
@@ -48,7 +62,7 @@ class LibraryTest(unittest.TestCase):
         beta = 1.0
 
         # Expected returned values for 90 degrees and center.
-        expected = numpy.zeros((2, 3), dtype=numpy.float)
+        expected = np.zeros((2, 3), dtype=np.float)
         expected[0] = [alpha, beta, -2.220446049250313e-16]
         expected[1] = [-beta, alpha, 3.0]
 
@@ -57,7 +71,7 @@ class LibraryTest(unittest.TestCase):
         self.assertTrue(truth, "3, 3 matrix was invalid. {}".format(msg))
 
         # Ensure a tiny matrix gets the same result with the same paramaters.
-        self.input_matrix = numpy.zeros((1,1), dtype=float)
+        self.input_matrix = np.zeros((1,1), dtype=float)
         rows, columns = self.input_matrix.shape
 
         expected[0] = [alpha, beta, -5.551115123125783e-17]
