@@ -31,10 +31,10 @@ class App:
 
     def openFileButtonPressed(self):
         filetypes = {
+            "all files":"*.*",
             "gif files":"*.gif",
             "jpeg files":"*.jpg",
             "png files":"*.png",
-            "all files":"*.*"
         }
         filename = TK.filedialog.askopenfilename(
             initialdir = "./",
@@ -42,7 +42,10 @@ class App:
             filetypes = list(filetypes.items()))
 
         if filename:
-            self.viewer = ImageViewer.ImageViewer(self.master, filename)
+            if self.viewer is None:
+                self.viewer = ImageViewer.ImageViewer(self.master, filename)
+            else:
+                self.viewer.set_image(filename)
             self.viewer.grid(row=0, column=1)
     
     def resizeButtonPressed(self):

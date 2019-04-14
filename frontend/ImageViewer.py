@@ -17,14 +17,7 @@ class ImageViewer(TK.Label):
             pass
 
     def __init__(self, master, filenm: str, *args, **kwargs):
-
-        # ALL THIS BACK AND FORTH FOR GRAYSCALE, MUST BE BETTER WAY
-        self.photo = Image.open(filenm)
-        self.np_photo = np.array(self.photo)
-        self.photo = Image.fromarray(self.np_photo, 'L')
-        self.np_photo = np.array(self.photo)
-        self.photoTK = ImageTk.PhotoImage(self.photo)
-        self.zoom_state = ImageViewer.ZoomState()
+        self.set_image(filenm)
         super().__init__(master, image=self.photoTK, *args, **kwargs)
 
         self.bind('<Enter>', self.mouse_enter)
@@ -32,6 +25,12 @@ class ImageViewer(TK.Label):
         self.bind('<Motion>', self.mouse_motion)
         self.bind('<Button-1>', self.mouse_btn1)
         self.bind('<Button-3>', self.mouse_btn3)
+
+    def set_image(self, filenm):
+        self.photo = Image.open(filenm).convert('L')
+        self.np_photo = np.array(self.photo)
+        self.photoTK = ImageTk.PhotoImage(self.photo)
+        self.zoom_state = ImageViewer.ZoomState()
 
     def recalculate_image_bounds(self):
         """
