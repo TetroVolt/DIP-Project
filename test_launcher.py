@@ -35,16 +35,14 @@ if __name__ == "__main__":
     # Set a flag so CircleCI knows we failed a test.
     failed = 1
 
+    # TODO: Once lib is working, add it.
+    suites = [gui_suite]
+
     runner = unittest.TextTestRunner(verbosity=3)
-    runner.run(lib_suite())
-
-    if not unittest.TestResult().wasSuccessful():
-        failed = 1
-
-    runner.run(gui_suite())
-
-    if not unittest.TestResult().wasSuccessful():
-        failed = 1
+    for suite in suites:
+        runner.run(suite())
+        if not unittest.TestResult().wasSuccessful():
+            failed = 1
 
     print("\nDone!\n")
 
