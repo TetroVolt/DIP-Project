@@ -5,6 +5,9 @@ from PIL import Image, ImageTk
 from .Library import lib
 
 class ImageViewer(TK.Label):
+    """ 
+    Responsible for rendering the transformed image
+    """
     class ZoomState:
         def __init__(self):
             self.hovered = False
@@ -13,9 +16,6 @@ class ImageViewer(TK.Label):
             self.prev_zoom_amt = 1
             pass
 
-    """ 
-    Responsible for rendering the transformed image
-    """
     def __init__(self, master, filenm: str, *args, **kwargs):
 
         # ALL THIS BACK AND FORTH FOR GRAYSCALE, MUST BE BETTER WAY
