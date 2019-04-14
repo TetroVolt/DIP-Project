@@ -10,6 +10,7 @@ class ImageViewer(TK.Label):
             self.hovered = False
             self.x, self.y = 0, 0
             self.zoom_amt = 2
+            self.prev_zoom_amt = 1
             pass
 
     """ 
@@ -38,8 +39,13 @@ class ImageViewer(TK.Label):
         """
         label_h, label_w = self.np_photo.shape
         zoom_amt = self.zoom_state.zoom_amt
+        if zoom_amt == 1: return
 
         zoom_w, zoom_h = label_w // zoom_amt, label_h // zoom_amt
+        if min(zoom_w, zoom_h) < 8: # ensure that lowest dimension is not less than 8 pixels
+            zoom_amt = self.zoom_state.zoom_amt = self.zoom_state.prev_zoom_amt
+            zoom_w, zoom_h = label_w // zoom_amt, label_h // zoom_amt
+
         # check if x, y of mouse is within safe bounds
         safe_min_x, safe_min_y = zoom_w // 2, zoom_h // 2
         safe_max_x, safe_max_y = label_w - safe_min_x, label_h - safe_min_y
@@ -73,12 +79,12 @@ class ImageViewer(TK.Label):
         self.configure(image=self.photoTK)
 
     def mouse_btn1(self, event):
-        print(self.zoom_state, event)
-        pass
+        self.zoom_state.prev_zoom_amt = self.zoom_state.zoom_amt
+        self.zoom_state.zoom_amt *= 2
     
     def mouse_btn3(self, event):
-        print(self.zoom_state, event)
-        pass
+        self.zoom_state.prev_zoom_amt = self.zoom_state.zoom_amt
+        self.zoom_state.zoom_amt = max(1,self.zoom_state.zoom_amt // 2)
 
     def rotate(self):
         print('ImageViewer::rotate')
