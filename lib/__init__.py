@@ -216,7 +216,7 @@ def warpAffine(src, M, dsize, dst, flags, borderMode, borderValue):
 
     return output
 
-def rotationMatrix2D(center: tuple, angle: float, scale: float) -> np.array:
+def getRotationMatrix2D(center: tuple, angle: float, scale: float) -> np.array:
     """
     parameters:
         center: tuple of 2 numbers representing center of rotation

@@ -5,14 +5,19 @@ import lib
 
 class LibraryTest(unittest.TestCase):
 
-    def assert_array(self, a, b):
-        a_size = a.shape
-        b_size = b.shape
-        self.assertTrue(a_size == b_size, "Arrays are not the same size.")
-        rows, columns = a_size
+    def assert_array(self, expected, actual):
+        expected_size = expected.shape
+        actual_size = actual.shape
+        if expected_size != actual_size:
+            return (False, "Arrays are not the same size.  Should be {} is {}.".format(expected_size, actual_size))
+        rows, columns = expected_size
         for row in range(0, rows):
             for column in range(0, columns):
-                self.assertTrue(a[row, column] == b[row, column], "Array contents are different.")
+                exp_val = expected[row, column]
+                actual_val = actual[row, column]
+                if exp_val != actual_val:
+                    return (False, "Array contents are different.  Should be {} is {}.".format(exp_val, actual_val))
+        return (True, None)
 
     def setUp(self):
         self.rows, self.columns = (3, 3)
@@ -29,15 +34,38 @@ class LibraryTest(unittest.TestCase):
         expected_downsize[0] = [4, 4]
         expected_downsize[1] = [5, 6]
         result = lib.resize(self.input_matrix, (2, 2))
-        self.assert_array(expected_downsize, result)
+        truth, msg = self.assert_array(expected_downsize, result)
+        self.assertTrue(truth, "Downsizing was incorrect. {}".format(msg))
 
     def test_warp_affine(self):
         #TODO-Add assertions on expected output.
         lib.warp_affine(self.input_matrix, 0, 0, 0, 0, 0, 0)
 
     def test_rotation_2D(self):
-        #TODO-Add assertions on expected output.
-        lib.get_rotation_matrix_2D(0, 0, 0, 0)
+        rows, columns = self.input_matrix.shape
+
+        alpha = 6.123233995736766e-17
+        beta = 1.0
+
+        # Expected returned values for 90 degrees and center.
+        expected = numpy.zeros((2, 3), dtype=numpy.float)
+        expected[0] = [alpha, beta, -2.220446049250313e-16]
+        expected[1] = [-beta, alpha, 3.0]
+
+        result = lib.getRotationMatrix2D((rows/2, columns/2), 90, 1)
+        truth, msg = self.assert_array(expected, result)
+        self.assertTrue(truth, "3, 3 matrix was invalid. {}".format(msg))
+
+        # Ensure a tiny matrix gets the same result with the same paramaters.
+        self.input_matrix = numpy.zeros((1,1), dtype=float)
+        rows, columns = self.input_matrix.shape
+
+        expected[0] = [alpha, beta, -5.551115123125783e-17]
+        expected[1] = [-beta, alpha, 1.0]
+
+        result = lib.getRotationMatrix2D((rows/2, columns/2), 90, 1)
+        truth, msg = self.assert_array(expected, result)
+        self.assertTrue(truth, "1, 1 matrix was invalid. {}".format(msg))
 
     def test_shear_transform(self):
         #TODO-Add assertions on expected output.

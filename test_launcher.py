@@ -35,16 +35,13 @@ if __name__ == "__main__":
     # Set a flag so CircleCI knows we failed a test.
     exit_code = 0
 
+    suites = [lib_suite, gui_suite]
+
     runner = unittest.TextTestRunner(verbosity=3)
-    runner.run(lib_suite())
-
-    if not unittest.TestResult().wasSuccessful():
-        exit_code = 1
-
-    runner.run(gui_suite())
-
-    if not unittest.TestResult().wasSuccessful():
-        exit_code = 2
+    for suite in suites:
+        runner.run(lib_suite())
+        if not unittest.TestResult().wasSuccessful():
+            exit_code = 1
 
     print("\nDone!\n")
 
