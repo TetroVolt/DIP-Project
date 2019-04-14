@@ -1,6 +1,6 @@
 import unittest
 import sys
-
+import argparse
 from lib.test_library import LibraryTest
 
 def exception_handler(exception_type, exception, traceback,
@@ -25,26 +25,33 @@ def gui_suite():
     #suite.addTest(loader.loadTestsFromTestCase(GUITest))
     return suite
 
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-d', '--debug', action='store_true', help="set debug on (PDB)")
+    parser.add_argument('-g', '--gui', action='store_true', help='test gui only')
+    parser.add_argument('-l', '--lib', action='store_true', help='test library only')
+    return parser.parse_args()
+
 if __name__ == "__main__":
-    if "--debug" in sys.argv or "-d" in sys.argv:
-        sys.argv.pop()
+    args = parse_args()
+    if args.debug:
         sys.excepthook = exception_handler
 
     print("\nRunning Tests...\n")
-
-    # Set a flag so CircleCI knows we failed a test.
-    failed = 1
-
-    # TODO: Once lib is working, add it.
-    suites = [gui_suite]
-
+    if args.gui:
+        suites = [gui_suite]        
+    elif args.lib:
+        suites = [lib_suite]
+    else:
+        suites = [gui_suite, lib_suite]
+    
+    exit_code = 0
     runner = unittest.TextTestRunner(verbosity=3)
     for suite in suites:
         runner.run(suite())
         if not unittest.TestResult().wasSuccessful():
-            failed = 1
+            exit_code += 1
 
     print("\nDone!\n")
-
-    sys.exit(failed)
-
+        
+    sys.exit(exit_code)
