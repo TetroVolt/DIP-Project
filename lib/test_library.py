@@ -5,9 +5,18 @@ import lib
 
 class LibraryTest(unittest.TestCase):
 
+    def assert_array(self, a, b):
+        a_size = a.shape
+        b_size = b.shape
+        self.assertTrue(a_size == b_size, "Arrays are not the same size.")
+        rows, columns = a_size
+        for row in range(0, rows):
+            for column in range(0, columns):
+                self.assertTrue(a[row, column] == b[row, column], "Array contents are different.")
+
     def setUp(self):
         self.rows, self.columns = (3, 3)
-        self.input_matrix = numpy.zeros((self.rows, self.columns, 3), dtype=numpy.uint8)
+        self.input_matrix = numpy.zeros((self.rows, self.columns), dtype=numpy.uint8)
         temp = 1
         # Create an input matrix filled with 1-9
         for row in range(0, self.rows):
@@ -16,8 +25,11 @@ class LibraryTest(unittest.TestCase):
                 temp += 1
 
     def test_resize(self):
-        # TODO-Add assertions on expected output.
-        lib.resize(self.input_matrix, 0)
+        expected_downsize = numpy.zeros((2, 2), dtype=numpy.uint8)
+        expected_downsize[0] = [4, 4]
+        expected_downsize[1] = [5, 6]
+        result = lib.resize(self.input_matrix, (2, 2))
+        self.assert_array(expected_downsize, result)
 
     def test_warp_affine(self):
         #TODO-Add assertions on expected output.
