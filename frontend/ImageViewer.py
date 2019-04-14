@@ -81,10 +81,12 @@ class ImageViewer(TK.Label):
     def mouse_btn1(self, event):
         self.zoom_state.prev_zoom_amt = self.zoom_state.zoom_amt
         self.zoom_state.zoom_amt *= 2
+        self.recalculate_image_bounds()
     
     def mouse_btn3(self, event):
         self.zoom_state.prev_zoom_amt = self.zoom_state.zoom_amt
         self.zoom_state.zoom_amt = max(1,self.zoom_state.zoom_amt // 2)
+        self.recalculate_image_bounds()
 
     def rotate(self):
         print('ImageViewer::rotate')
