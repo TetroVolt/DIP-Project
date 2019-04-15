@@ -38,6 +38,7 @@ if __name__ == "__main__":
         sys.excepthook = exception_handler
 
     print("\nRunning Tests...\n")
+        
     if args.gui:
         suites = [gui_suite]        
     elif args.lib:
