@@ -1,48 +1,48 @@
 
-import tkinter as TK
+import tkinter as tk
 import tkinter.filedialog
 from tkinter import ttk
 from . import ImageViewer
+import numpy as np
 
 # import the Transformations library
 from .Library import lib
 
-class App:
-    def __init__(self, master, img=None):
-        self.master = master
-        self.tool_box = ttk.Frame(master, padding=20)
-        self.tool_box.grid()
-
+class App(tk.Tk):
+    def __init__(self, img=None):
+        super().__init__()
+        self.frame = ttk.Frame(self, padding=20)
+        self.frame.grid()
         self.__initButtons()
         self.viewer = None
 
     def __initButtons(self):
         self.openFileButton = ttk.Button(
-            self.tool_box, 
+            self.frame, 
             text="open file",
             command=self.openFileButtonPressed)
         self.openFileButton.grid(column=0)
 
         self.openFileButton = ttk.Button(
-            self.tool_box, 
+            self.frame, 
             text="save file",
             command=self.saveFileButtonPressed)
         self.openFileButton.grid(column=0)
 
         self.rotateButton = ttk.Button(
-            self.tool_box,
+            self.frame,
             text="Resize",
             command=self.resizeButtonPressed)
         self.rotateButton.grid(column=0)
 
         self.rotateButton = ttk.Button(
-            self.tool_box,
+            self.frame,
             text="Rotate",
             command=self.rotateButtonPressed)
         self.rotateButton.grid(column=0)
 
         self.rotateButton = ttk.Button(
-            self.tool_box,
+            self.frame,
             text="Affine",
             command=self.affineButtonPressed)
         self.rotateButton.grid(column=0)
@@ -54,20 +54,20 @@ class App:
             "jpeg files":"*.jpg",
             "png files":"*.png",
         }
-        filename = TK.filedialog.askopenfilename(
+        filename = tk.filedialog.askopenfilename(
             initialdir = "./",
             title = "Select file",
             filetypes = list(filetypes.items()))
 
         if filename:
             if self.viewer is None:
-                self.viewer = ImageViewer.ImageViewer(self.master, filename)
+                self.viewer = ImageViewer.ImageViewer(self, filename)
             else:
                 self.viewer.setImage(filename)
             self.viewer.grid(row=0, column=1)
     
     def saveFileButtonPressed(self):
-        filename = TK.filedialog.asksaveasfilename(
+        filename = tk.filedialog.asksaveasfilename(
                         initialdir = "./",
                         title = "Select file",
                         filetypes = (("jpeg files","*.jpg"),("all files","*.*")))
@@ -87,5 +87,6 @@ class App:
         if self.viewer is None: return
         # TODO open dialog box for user to enter matrix values manually
         # for i hat, j hat, and offsets
+        self.viewer.affineTransform(np.zeros(1))
 
 

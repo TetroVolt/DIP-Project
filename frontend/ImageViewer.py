@@ -1,10 +1,10 @@
 
-import tkinter as TK
+import tkinter as tk
 import numpy as np
 from PIL import Image, ImageTk
 from .Library import lib
 
-class ImageViewer(TK.Label):
+class ImageViewer(tk.Label):
     """ 
     Responsible for rendering the transformed image
     """
@@ -14,7 +14,6 @@ class ImageViewer(TK.Label):
             self.x, self.y = 0, 0
             self.zoom_amt = 2
             self.prev_zoom_amt = 1
-            pass
 
     def __init__(self, master, filenm: str, *args, **kwargs):
         self.setImage(filenm)
@@ -26,9 +25,16 @@ class ImageViewer(TK.Label):
         self.bind('<Button-1>', self.mouseBtn1)
         self.bind('<Button-3>', self.mouseBtn3)
 
-    def setImage(self, filenm):
+    def setImage(self, filenm: str):
         self.photo = Image.open(filenm).convert('L')
         self.np_photo = np.array(self.photo)
+        self.photoTK = ImageTk.PhotoImage(self.photo)
+        self.zoom_state = ImageViewer.ZoomState()
+
+    def setImageFromNPArray(self, nparray: np.ndarray):
+        assert(isinstance(nparray, np.ndarray))
+        self.np_photo = nparray
+        self.photo = Image.fromarray(self.np_photo)
         self.photoTK = ImageTk.PhotoImage(self.photo)
         self.zoom_state = ImageViewer.ZoomState()
 
@@ -92,6 +98,11 @@ class ImageViewer(TK.Label):
         scipy.misc.imsave(filename, self.np_photo)
 
     def affineTransform(self, mat: np.array):
+        rows, cols = self.np_photo.shape
+        mat = lib.getRotationMatrix2D((cols/2,rows/2),45,1)
+        temp = lib.warpAffine(self.np_photo, mat, (cols, rows), lib.INTER_NEAREST)
+        self.setImageFromNPArray(temp)
+        self.configure(image=self.photoTK)
         pass
 
 
