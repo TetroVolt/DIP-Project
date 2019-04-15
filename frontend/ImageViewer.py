@@ -17,22 +17,22 @@ class ImageViewer(TK.Label):
             pass
 
     def __init__(self, master, filenm: str, *args, **kwargs):
-        self.set_image(filenm)
+        self.setImage(filenm)
         super().__init__(master, image=self.photoTK, *args, **kwargs)
 
-        self.bind('<Enter>', self.mouse_enter)
-        self.bind('<Leave>', self.mouse_leave)
-        self.bind('<Motion>', self.mouse_motion)
-        self.bind('<Button-1>', self.mouse_btn1)
-        self.bind('<Button-3>', self.mouse_btn3)
+        self.bind('<Enter>', self.mouseEnter)
+        self.bind('<Leave>', self.mouseLeave)
+        self.bind('<Motion>', self.mouseMotion)
+        self.bind('<Button-1>', self.mouseBtn1)
+        self.bind('<Button-3>', self.mouseBtn3)
 
-    def set_image(self, filenm):
+    def setImage(self, filenm):
         self.photo = Image.open(filenm).convert('L')
         self.np_photo = np.array(self.photo)
         self.photoTK = ImageTk.PhotoImage(self.photo)
         self.zoom_state = ImageViewer.ZoomState()
 
-    def recalculate_image_bounds(self):
+    def recalculateImageBounds(self):
         """
         MUST TRY TO DO THIS ASYNCHRONOUSLY
         """
@@ -62,32 +62,37 @@ class ImageViewer(TK.Label):
         self.photoTK = ImageTk.PhotoImage(self.photo)
         self.configure(image=self.photoTK)
 
-    def mouse_motion(self, event):
+    def mouseMotion(self, event):
         self.zoom_state.x = event.x
         self.zoom_state.y = event.y
-        self.recalculate_image_bounds()
+        self.recalculateImageBounds()
         #print(self.zoom_state, event)
 
-    def mouse_enter(self, event):
+    def mouseEnter(self, event):
         self.zoom_state.hover = True
     
-    def mouse_leave(self, event):
+    def mouseLeave(self, event):
         self.zoom_state.hover = False
         self.photo = Image.fromarray(self.np_photo)
         self.photoTK = ImageTk.PhotoImage(self.photo)
         self.configure(image=self.photoTK)
 
-    def mouse_btn1(self, event):
+    def mouseBtn1(self, event):
         self.zoom_state.prev_zoom_amt = self.zoom_state.zoom_amt
         self.zoom_state.zoom_amt *= 2
-        self.recalculate_image_bounds()
+        self.recalculateImageBounds()
     
-    def mouse_btn3(self, event):
+    def mouseBtn3(self, event):
         self.zoom_state.prev_zoom_amt = self.zoom_state.zoom_amt
         self.zoom_state.zoom_amt = max(1,self.zoom_state.zoom_amt // 2)
-        self.recalculate_image_bounds()
+        self.recalculateImageBounds()
 
-    def rotate(self):
-        print('ImageViewer::rotate')
+    def saveImage(self, filename:str):
+        import scipy.misc
+        scipy.misc.imsave(filename, self.np_photo)
+
+    def affineTransform(self, mat: np.array):
+        pass
+
 
 
