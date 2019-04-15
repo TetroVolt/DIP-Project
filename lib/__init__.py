@@ -207,18 +207,32 @@ def bilinear_interpolation(image: np.array, scale: Tuple[float, float], size: Tu
     return new_image
 
 
-def warpAffine(src, M, dsize, dst, flags, borderMode, borderValue):
-    input_height, input_width = src.shape[:2]
-    output = np.zeros((input_height, input_width, 3), dtype = np.uint8)
+def warpAffine(image: np.array, transform: np.array, size: Tuple[int, int]) -> np.array:
+    """
+        Apply the affine transformation to an image given a 2x3 transformation matrix.
 
-    for u in range(input_width):
-        for v in range(input_height):
-            x = u * M[0, 0] + v * M[0,1] + M[0,2]
-            y = u * M[1, 0] + v * M[1,1] + M[1,2]
-            tempx, tempy = int(x), int(y)
-            if 0 < tempx < input_width and 0 < tempy < input_height:
-                out = image[tempy, tempx]
-                output[v, u] = out
+        Args:
+            image (:class: array):  The image to perform a transformation on.
+
+            transform (:class: array):  A 2x3 transformation matrix.  This is used to remap each pixel.
+
+            size (:class: tuple):  The size of the new image (rows, columns).
+
+        Returns:
+            (:class: array):  The transformed image of the specified image.
+    """
+    rows, columns = image.shape
+    output = np.zeros((rows, columns), dtype = np.uint8)
+
+    for row in range(0, rows):
+        for column in range(0, columns):
+            # [x'] = [a b][x]+[t1] Where [a b t1] is the transform matrix.
+            # [y']   [c d][y] [t2]       [c d t2]
+            new_x = int(row * transform[0, 0] + column * transform[0,1] + transform[0,2])
+            new_y = int(row * transform[1, 0] + column * transform[1,1] + transform[1,2])
+            # Ensure we don't go out of bounds of the image.
+            if 0 < new_x < columns and 0 < new_y < rows:
+                output[row, column] = image[new_y, new_x]
 
     return output
 

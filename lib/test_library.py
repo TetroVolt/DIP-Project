@@ -51,11 +51,12 @@ class LibraryTest(test.TestCase):
         truth, msg = self.assert_array(expected_downsize, result)
         self.assertTrue(truth, "Downsizing was incorrect. {}".format(msg))
 
-    def test_warp_affine(self):
+    def test_warpAffine(self):
         #TODO-Add assertions on expected output.
-        lib.warp_affine(self.input_matrix, 0, 0, 0, 0, 0, 0)
+        transformation = lib.getRotationMatrix2D((3/2, 3/2), 90, 1)
+        lib.warpAffine(self.input_matrix, transformation, (3, 3))
 
-    def test_rotation_2D(self):
+    def test_rotation2D(self):
         rows, columns = self.input_matrix.shape
 
         alpha = 6.123233995736766e-17

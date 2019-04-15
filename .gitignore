@@ -53,6 +53,9 @@ coverage.xml
 # Vi/Vim:
 *.swp
 
+# VS Studio
+.vs/
+
 # Django stuff:
 *.log
 local_settings.py
