@@ -34,3 +34,4 @@ class Library:
 
 Library = SingletonDecorator(Library)
 lib = Library('opencv')
+#lib = Library('library')
