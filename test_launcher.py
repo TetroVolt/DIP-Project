@@ -1,4 +1,4 @@
-import unittest
+import unittest as test
 import sys
 import argparse
 from lib.test_library import LibraryTest
@@ -12,16 +12,16 @@ def exception_handler(exception_type, exception, traceback,
     debug_hook(exception_type, exception, traceback)
     pdb.post_mortem(traceback)
 
-def lib_suite():
-    suite = unittest.TestSuite()
-    loader = unittest.TestLoader()
+def lib_suite() -> test.TestSuite:
+    suite = test.TestSuite()
+    loader = test.TestLoader()
     suite.addTest(loader.loadTestsFromTestCase(LibraryTest))
     return suite
 
-def gui_suite():
+def gui_suite() -> test.TestSuite:
     # TODO-Add gui
-    suite = unittest.TestSuite()
-    loader = unittest.TestLoader()
+    suite = test.TestSuite()
+    loader = test.TestLoader()
     #suite.addTest(loader.loadTestsFromTestCase(GUITest))
     return suite
 
@@ -47,11 +47,12 @@ if __name__ == "__main__":
         suites = [gui_suite, lib_suite]
     
     exit_code = 0
-    runner = unittest.TextTestRunner(verbosity=3)
+
+    runner = test.TextTestRunner(verbosity=3)
     for suite in suites:
-        runner.run(suite())
-        if not unittest.TestResult().wasSuccessful():
-            exit_code += 1
+        runner.run(lib_suite())
+        if not test.TestResult().wasSuccessful():
+            exit_code = 1
 
     print("\nDone!\n")
         

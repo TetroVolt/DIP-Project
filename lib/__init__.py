@@ -2,10 +2,13 @@ import numpy as np
 import math
 import math
 
+from typing import Tuple
+
 INTER_NEAREST = 0
 INTER_LINEAR = 1
 
-def resize(image, output_size, dst=None, fx=None, fy=None, interpolation=INTER_LINEAR):
+def resize(image: np.array, output_size: Tuple[int, int],
+           dst=None, fx=None, fy=None, interpolation: int=INTER_LINEAR) -> np.array:
     """
         Wrapper for the appropriate funciton to resample an image based on the interpolation method.
 
@@ -37,19 +40,19 @@ def resize(image, output_size, dst=None, fx=None, fy=None, interpolation=INTER_L
     elif interpolation == INTER_NEIGHBOR:
         return nearest_neighbor(image, (scale_y, scale_x), (new_rows, new_columns))
 
-def nearest_neighbor(image, scale, size):
+def nearest_neighbor(image: np.array, scale: Tuple[float, float], size: Tuple[int, int]) -> np.array:
     """
         Performs a neartest neighbor scaling of the desired image.
 
         Args:
             image (:class: array):  The image to be resampled, as a matrix of unsigned intergers.
 
-            scale_x (:class: double):  Amount of scale along the x direction (eg. 0.5, 1.5, 2.5).
+            scale (:class: tuple):  Amount of scale (y, x) along each direction (eg. 0.5, 1.5, 2.5).
 
-            scale_y (:class: double):  Amount of scale along the y direction (eg. 0.5, 1.5, 2.5).
+            size (:class: tuple):  Size of the new image (rows, columns).
 
         Returns:
-            (:class: array):  A resized image based on the interpolation method specified.
+            (:class: array):  A resized image based on nearest neighbor interpolation..
     """
    # Get the dimensions of the current image.
     rows = len(image)
@@ -80,7 +83,7 @@ def nearest_neighbor(image, scale, size):
             new_image[row_iter, column_iter] = image[nearest_y, nearest_x]
     return new_image
 
-def interpolate(right, mapped_val, left, pixel1, pixel2):
+def interpolate(right: int, mapped_val: float, left: int, pixel1: int, pixel2: int) -> float:
     """
         Performs the interpolation mathematics.
 
@@ -96,11 +99,14 @@ def interpolate(right, mapped_val, left, pixel1, pixel2):
            pixel1 (:class: int):  The source image pixel value at x^2.
 
            pixel2 (:class: int):  The source image pixel value at x^1.
+
+        Returns:
+            (:class: float):  The result.
     """
     return ((right - mapped_val) / (right - left)) * pixel1 + \
            ((mapped_val - left) / (right - left)) * pixel2
 
-def bilinear_interpolation(image, scale, size):
+def bilinear_interpolation(image: np.array, scale: Tuple[float, float], size: Tuple[int, int]) -> np.array:
     """
         Performs a bilinear interpolation rescaling of the desired image.
         Formula obtained from Wikipedia here: https://en.wikipedia.org/wiki/Bilinear_interpolation
@@ -108,12 +114,12 @@ def bilinear_interpolation(image, scale, size):
         Args:
             image (:class: array):  The image to be resampled, as a matrix of unsigned intergers.
 
-            scale_x (:class: double):  Amount of scale along the x direction (eg. 0.5, 1.5, 2.5).
+            scale (:class: tuple):  Amount of scale (y, x) along each direction (eg. 0.5, 1.5, 2.5).
 
-            scale_y (:class: double):  Amount of scale along the y direction (eg. 0.5, 1.5, 2.5).
+            size (:class: tuple):  Size of the new image (rows, columns).
 
         Returns:
-            (:class: array):  A resized image based on the interpolation method specified.
+            (:class: array):  A resized image based on bilinear interpolation.
     """
     # Get the dimensions of the current image.
     rows, columns = image.shape
@@ -201,29 +207,53 @@ def bilinear_interpolation(image, scale, size):
     return new_image
 
 
-def warpAffine(src, M, dsize, dst, flags, borderMode, borderValue):
-    input_height, input_width = src.shape[:2]
-    output = np.zeros((input_height, input_width, 3), dtype = np.uint8)
+def warpAffine(image: np.array, transform: np.array, size: Tuple[int, int]) -> np.array:
+    """
+        Apply the affine transformation to an image given a 2x3 transformation matrix.
 
-    for u in range(input_width):
-        for v in range(input_height):
-            x = u * M[0, 0] + v * M[0,1] + M[0,2]
-            y = u * M[1, 0] + v * M[1,1] + M[1,2]
-            tempx, tempy = int(x), int(y)
-            if 0 < tempx < input_width and 0 < tempy < input_height:
-                out = image[tempy, tempx]
-                output[v, u] = out
+        Args:
+            image (:class: array):  The image to perform a transformation on.
+
+            transform (:class: array):  A 2x3 transformation matrix.  This is used to remap each pixel.
+
+            size (:class: tuple):  The size of the new image (rows, columns).
+
+        Returns:
+            (:class: array):  The transformed image of the specified image.
+    """
+    rows, columns = image.shape
+    output = np.zeros((rows, columns), dtype = np.uint8)
+
+    for row in range(0, rows):
+        for column in range(0, columns):
+            # [x'] = [a b][x]+[t1] Where [a b t1] is the transform matrix.
+            # [y']   [c d][y] [t2]       [c d t2]
+            new_x = int(row * transform[0, 0] + column * transform[0,1] + transform[0,2])
+            new_y = int(row * transform[1, 0] + column * transform[1,1] + transform[1,2])
+            # Ensure we don't go out of bounds of the image.
+            if 0 < new_x < columns and 0 < new_y < rows:
+                output[row, column] = image[new_y, new_x]
 
     return output
 
-def rotationMatrix2D(center: tuple, angle: float, scale: float) -> np.array:
+def getRotationMatrix2D(center: Tuple[float, float], angle: float, scale: float, radians: bool=False) -> np.array:
     """
-    parameters:
-        center: tuple of 2 numbers representing center of rotation
-        angle: specifies amount of counter-clockwise rotation in degrees
-        scale: specifies scaling amount to increase magnitude of unit vectors by
+        Gets a two dimensional rotation matrix with adjustable center of rotation.
+        Used as an input for an affine transform.  This will not transform anything by itself.
+
+        Args:
+            center (:class: tuple): Tuple of two floats representing (y, x) coordinate of the center.
+
+            angle (:class: float): Specifies the amount of counter-clockwise rotation in degrees.
+                If radians=True, this is expected to be in radians.
+
+            scale (:class: float): Specifies how much to increases the magnitude of the unit vectors.
+
+        Kargs:
+            radians (:class: bool):  If true, then the angle paramater is expected to be in radians.
+                Otherwise it is expected to be in degrees.  Defaults to false.
     """
-    angle = math.radians(angle)
+    angle = math.radians(angle) if not radians else angle
     center_x, center_y = center
 
     alpha = scale * math.cos(angle)
@@ -281,14 +311,15 @@ def perspectiveTransform(src, dst, solveMethod = None):
 def warpPerspective(src, M, dsize, dst, flags, borderMode, borderValue):
     raise NotImplementedError()
 
-def get_exports():
-    exports = {
+def get_exports() -> dict:
+    """
+        This returns all the module functions as a dictionary map.
+    """
+    return {
         "resize": resize,
-        "warp_affine" : warp_affine,
-        "get_rotation_matrix_2D": get_rotation_matrix_2D,
-        "shear_transform": shear_transform,
-        "perspective_transform": perspective_transform,
-        "warp_perspective": warp_perspective,
+        "warpAffine" : warpAffine,
+        "getRotationMatrix2D": getRotationMatrix2D,
+        "shearTransform": shearTransform,
+        "perspectiveTransform": perspectiveTransform,
+        "warpPerspective": warpPerspective,
     }
-
-    return exports
