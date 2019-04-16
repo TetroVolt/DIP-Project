@@ -90,6 +90,32 @@ class App(tk.Tk):
     def resizeButtonPressed(self):
         if self.viewer is None: return
         # TODO open dialog to ask how much in x and y to resize by
+        self.viewer.state.zoom_mode = False
+        center = self.viewer.state.last_clicked_x, self.viewer.state.last_clicked_y
+
+        root = tk.Tk()
+        root.attributes('-type', 'dialog')
+        frame = ttk.Frame(root, padding=20)
+        frame.grid()
+        fx_entry = tk.Entry(frame)
+        fx_entry.grid()
+        fy_entry = tk.Entry(frame)
+        fy_entry.grid()
+
+        def doneAction():
+            fx, fy = fx_entry.get(), fy_entry.get()
+            try:
+                fx, fy = float(fx), float(fy)
+            except:
+                return
+            mat = np.float32([
+                [fx, 0, 0],
+                [0, fy, 0]
+            ])
+            self.viewer.paddedAffineTransform(mat)
+            root.destroy()
+        done = tk.Button(frame, text="done", command=doneAction)
+        done.grid()
 
     def rotateButtonPressed(self):
         if self.viewer is None: return
