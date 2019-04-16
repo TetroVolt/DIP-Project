@@ -82,6 +82,8 @@ class App(tk.Tk):
     def rotateButtonPressed(self):
         if self.viewer is None: return
         # TODO open dialog box to ask for theta and center of rotation
+        from .RotateDialog import RotateDialog
+        rot = RotateDialog()
 
     def affineButtonPressed(self):
         if self.viewer is None: return
