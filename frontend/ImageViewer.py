@@ -9,12 +9,22 @@ class ImageViewer(tk.Label):
     Responsible for rendering the transformed image
     """
     class State:
-        def __init__(self):
+        def __init__(self, shape=None):
             self.zoom_mode = False
             self.x, self.y = 0, 0
             self.zoom_amt = 1
             self.prev_zoom_amt = 1
             self.last_clicked_x, self.last_clicked_y = 0,0
+
+            if shape:
+                h, w = shape
+                self.original_homology = np.array([
+                    [0, w, w, 0],
+                    [0, 0, h, h],
+                    [1, 1, 1, 1]
+                ], dtype=np.float)
+            else:
+                self.original_homology = None
 
     def __init__(self, master, filenm: str, *args, **kwargs):
         self.setImage(filenm)
@@ -30,14 +40,16 @@ class ImageViewer(tk.Label):
         self.photo = Image.open(filenm).convert('L')
         self.np_photo = np.array(self.photo)
         self.photoTK = ImageTk.PhotoImage(self.photo)
-        self.state = ImageViewer.State()
+        self.state = ImageViewer.State(self.np_photo.shape)
 
     def setImageFromNPArray(self, nparray: np.ndarray):
         assert(isinstance(nparray, np.ndarray))
         self.np_photo = nparray
+        self.state.bound_top_left = 0,0
+        self.state.bound_bottom_right = self.np_photo.shape[::-1]
         self.photo = Image.fromarray(self.np_photo)
         self.photoTK = ImageTk.PhotoImage(self.photo)
-        self.state = ImageViewer.State()
+        self.state = ImageViewer.State(self.np_photo.shape)
 
     def recalculateImageBounds(self):
         """
@@ -101,10 +113,26 @@ class ImageViewer(tk.Label):
 
     def affineTransform(self, mat: np.array):
         rows, cols = self.np_photo.shape
-        temp = lib.warpAffine(self.np_photo, mat, (cols, rows), lib.INTER_NEAREST)
+
+        mapped_homologies = mat.dot(self.state.original_homology)
+        x_coords = mapped_homologies[0,:]
+        y_coords = mapped_homologies[1,:]
+        min_x, max_x = x_coords.min(), x_coords.max()
+        min_y, max_y = y_coords.min(), y_coords.max()
+
+        dst_shape = (int(np.round(max_x - min_x)), int(np.round(max_y - min_y)))
+            
+        # add translation to the transformation matrix to shift to positive values
+        mat[0,2] -= min_x
+        mat[1,2] -= min_y
+
+        temp = lib.warpAffine(self.np_photo, mat, dst_shape, lib.INTER_NEAREST)
         self.setImageFromNPArray(temp)
         self.configure(image=self.photoTK)
-
-
+        
+        transition = np.eye(3)
+        transition[0,2] = mat[0,2]
+        transition[1,2] = mat[1,2]
+        self.state.original_homology = transition.dot(np.vstack((mapped_homologies, [1.,1.,1.,1.])))
 
 
