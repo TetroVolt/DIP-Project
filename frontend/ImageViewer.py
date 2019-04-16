@@ -15,7 +15,10 @@ class ImageViewer(tk.Label):
             self.zoom_amt = 1
             self.prev_zoom_amt = 1
             self.last_clicked_x, self.last_clicked_y = 0,0
-
+            self.set_default_homology(shape)
+            self.affinepad = False
+            
+        def set_default_homology(self, shape=None):
             if shape:
                 h, w = shape
                 self.original_homology = np.array([
@@ -96,7 +99,7 @@ class ImageViewer(tk.Label):
 
     def mouseBtn1(self, event):
         self.state.last_clicked_x, self.state.last_clicked_y = event.x, event.y
-        print(event.x, event.y)
+        print('last clicked:', event.x, event.y)
         if self.state.zoom_mode:
             self.state.prev_zoom_amt = self.state.zoom_amt
             self.state.zoom_amt *= 2
@@ -113,6 +116,13 @@ class ImageViewer(tk.Label):
         scipy.misc.imsave(filename, self.np_photo)
 
     def affineTransform(self, mat: np.array):
+        rows, cols = self.np_photo.shape
+        self.state.set_default_homology(self.np_photo.shape)
+        temp = lib.warpAffine(self.np_photo, mat, (cols,rows), lib.INTER_NEAREST)
+        self.setImageFromNPArray(temp)
+        self.configure(image=self.photoTK)
+
+    def paddedAffineTransform(self, mat: np.array):
         rows, cols = self.np_photo.shape
 
         mapped_homologies = mat.dot(self.state.original_homology)
@@ -134,5 +144,4 @@ class ImageViewer(tk.Label):
         mapped_homologies[0,:] -= min_x
         mapped_homologies[1,:] -= min_y
         self.state.original_homology = np.vstack((mapped_homologies,[1,1,1,1]))
-
 

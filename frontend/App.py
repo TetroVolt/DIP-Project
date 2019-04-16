@@ -53,6 +53,12 @@ class App(tk.Tk):
             command=self.affineButtonPressed)
         self.affineButton.grid(column=0)
 
+        self.paddingButton = ttk.Button(
+            self.frame,
+            text="padding",
+            command=self.paddingButtonPressed)
+        self.paddingButton.grid(column=0)
+
     def openFileButtonPressed(self):
         filetypes = {
             "all files":"*.*",
@@ -104,7 +110,11 @@ class App(tk.Tk):
             except:
                 return
             mat = lib.getRotationMatrix2D(center, degrees, 1)
-            self.viewer.affineTransform(mat)
+            if self.viewer.state.affinepad:
+                self.viewer.paddedAffineTransform(mat)
+            else:
+                self.viewer.affineTransform(mat)
+
             root.destroy()
         done = tk.Button(frame, text="done", command=doneAction)
         done.grid()
@@ -153,8 +163,13 @@ class App(tk.Tk):
             start = np.float32([pt1_s, pt2_s, pt3_s])
             end = np.float32([pt1_f, pt2_f, pt3_f])
             mat = lib.getAffineTransform(start, end)
-            self.viewer.affineTransform(mat)
+            if self.viewer.state.affinepad:
+                self.viewer.paddedAffineTransform(mat)
+            else:
+                self.viewer.affineTransform(mat)
+
             root.destroy()
+
         done = tk.Button(frame, text="done", command=doneAction)
         done.grid()
 
@@ -163,4 +178,9 @@ class App(tk.Tk):
         self.viewer.state.zoom_mode = not self.viewer.state.zoom_mode
         relief = ['pressed'] if self.viewer.state.zoom_mode else ['!pressed']
         self.zoomButton.state(relief)
-        
+    
+    def paddingButtonPressed(self):
+        if self.viewer is None: return
+        self.viewer.state.affinepad = not self.viewer.state.affinepad
+        relief = ['pressed'] if self.viewer.state.affinepad else ['!pressed']
+        self.paddingButton.state(relief)
