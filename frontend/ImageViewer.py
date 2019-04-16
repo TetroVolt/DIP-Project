@@ -8,12 +8,13 @@ class ImageViewer(tk.Label):
     """ 
     Responsible for rendering the transformed image
     """
-    class ZoomState:
+    class State:
         def __init__(self):
-            self.hovered = False
+            self.zoom_mode = False
             self.x, self.y = 0, 0
-            self.zoom_amt = 2
+            self.zoom_amt = 1
             self.prev_zoom_amt = 1
+            self.last_clicked_x, self.last_clicked_y = 0,0
 
     def __init__(self, master, filenm: str, *args, **kwargs):
         self.setImage(filenm)
@@ -29,33 +30,33 @@ class ImageViewer(tk.Label):
         self.photo = Image.open(filenm).convert('L')
         self.np_photo = np.array(self.photo)
         self.photoTK = ImageTk.PhotoImage(self.photo)
-        self.zoom_state = ImageViewer.ZoomState()
+        self.state = ImageViewer.State()
 
     def setImageFromNPArray(self, nparray: np.ndarray):
         assert(isinstance(nparray, np.ndarray))
         self.np_photo = nparray
         self.photo = Image.fromarray(self.np_photo)
         self.photoTK = ImageTk.PhotoImage(self.photo)
-        self.zoom_state = ImageViewer.ZoomState()
+        self.state = ImageViewer.State()
 
     def recalculateImageBounds(self):
         """
         MUST TRY TO DO THIS ASYNCHRONOUSLY
         """
-        label_h, label_w = self.np_photo.shape
-        zoom_amt = self.zoom_state.zoom_amt
+        zoom_amt = self.state.zoom_amt
         if zoom_amt == 1: return
+        label_h, label_w = self.np_photo.shape
 
         zoom_w, zoom_h = label_w // zoom_amt, label_h // zoom_amt
         if min(zoom_w, zoom_h) < 8: # ensure that lowest dimension is not less than 8 pixels
-            zoom_amt = self.zoom_state.zoom_amt = self.zoom_state.prev_zoom_amt
+            zoom_amt = self.state.zoom_amt = self.state.prev_zoom_amt
             zoom_w, zoom_h = label_w // zoom_amt, label_h // zoom_amt
 
         # check if x, y of mouse is within safe bounds
         safe_min_x, safe_min_y = zoom_w // 2, zoom_h // 2
         safe_max_x, safe_max_y = label_w - safe_min_x, label_h - safe_min_y
 
-        X,Y = self.zoom_state.x, self.zoom_state.y
+        X,Y = self.state.x, self.state.y
         X = min(max(safe_min_x, X), safe_max_x)
         Y = min(max(safe_min_y, Y), safe_max_y)
         temp =  self.np_photo[Y-safe_min_y:Y+safe_min_y,X-safe_min_x:X+safe_min_x]
@@ -69,28 +70,29 @@ class ImageViewer(tk.Label):
         self.configure(image=self.photoTK)
 
     def mouseMotion(self, event):
-        self.zoom_state.x = event.x
-        self.zoom_state.y = event.y
+        self.state.x = event.x
+        self.state.y = event.y
         self.recalculateImageBounds()
-        #print(self.zoom_state, event)
 
     def mouseEnter(self, event):
-        self.zoom_state.hover = True
+        pass
     
     def mouseLeave(self, event):
-        self.zoom_state.hover = False
         self.photo = Image.fromarray(self.np_photo)
         self.photoTK = ImageTk.PhotoImage(self.photo)
         self.configure(image=self.photoTK)
 
     def mouseBtn1(self, event):
-        self.zoom_state.prev_zoom_amt = self.zoom_state.zoom_amt
-        self.zoom_state.zoom_amt *= 2
+        self.last_clicked_x, self.last_clicked_y = event.x, event.y
+        if self.state.zoom_mode:
+            self.state.prev_zoom_amt = self.state.zoom_amt
+            self.state.zoom_amt *= 2
         self.recalculateImageBounds()
     
     def mouseBtn3(self, event):
-        self.zoom_state.prev_zoom_amt = self.zoom_state.zoom_amt
-        self.zoom_state.zoom_amt = max(1,self.zoom_state.zoom_amt // 2)
+        if self.state.zoom_mode:
+            self.state.prev_zoom_amt = self.state.zoom_amt
+            self.state.zoom_amt = max(1,self.state.zoom_amt // 2)
         self.recalculateImageBounds()
 
     def saveImage(self, filename:str):
@@ -99,11 +101,10 @@ class ImageViewer(tk.Label):
 
     def affineTransform(self, mat: np.array):
         rows, cols = self.np_photo.shape
-        mat = lib.getRotationMatrix2D((cols/2,rows/2),45,1)
         temp = lib.warpAffine(self.np_photo, mat, (cols, rows), lib.INTER_NEAREST)
         self.setImageFromNPArray(temp)
         self.configure(image=self.photoTK)
-        pass
+
 
 
 
