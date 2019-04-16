@@ -52,7 +52,7 @@ class ImageViewer(tk.Label):
         self.state.bound_bottom_right = self.np_photo.shape[::-1]
         self.photo = Image.fromarray(self.np_photo)
         self.photoTK = ImageTk.PhotoImage(self.photo)
-        self.state = ImageViewer.State(self.np_photo.shape)
+        #self.state = ImageViewer.State(self.np_photo.shape)
 
     def recalculateImageBounds(self):
         """
@@ -117,8 +117,8 @@ class ImageViewer(tk.Label):
 
     def affineTransform(self, mat: np.array):
         rows, cols = self.np_photo.shape
-        self.state.set_default_homology(self.np_photo.shape)
         temp = lib.warpAffine(self.np_photo, mat, (cols,rows), lib.INTER_NEAREST)
+        #self.state.set_default_homology(self.np_photo.shape)
         self.setImageFromNPArray(temp)
         self.configure(image=self.photoTK)
 
