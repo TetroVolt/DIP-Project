@@ -95,7 +95,8 @@ class ImageViewer(tk.Label):
         self.configure(image=self.photoTK)
 
     def mouseBtn1(self, event):
-        self.last_clicked_x, self.last_clicked_y = event.x, event.y
+        self.state.last_clicked_x, self.state.last_clicked_y = event.x, event.y
+        print(event.x, event.y)
         if self.state.zoom_mode:
             self.state.prev_zoom_amt = self.state.zoom_amt
             self.state.zoom_amt *= 2
@@ -129,10 +130,9 @@ class ImageViewer(tk.Label):
         temp = lib.warpAffine(self.np_photo, mat, dst_shape, lib.INTER_NEAREST)
         self.setImageFromNPArray(temp)
         self.configure(image=self.photoTK)
-        
-        transition = np.eye(3)
-        transition[0,2] = mat[0,2]
-        transition[1,2] = mat[1,2]
-        self.state.original_homology = transition.dot(np.vstack((mapped_homologies, [1.,1.,1.,1.])))
+
+        mapped_homologies[0,:] -= min_x
+        mapped_homologies[1,:] -= min_y
+        self.state.original_homology = np.vstack((mapped_homologies,[1,1,1,1]))
 
 
