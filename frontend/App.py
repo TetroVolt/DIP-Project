@@ -59,6 +59,12 @@ class App(tk.Tk):
             command=self.paddingButtonPressed)
         self.paddingButton.grid(column=0)
 
+        self.fisheyeButton = ttk.Button(
+            self.frame,
+            text="fisheye",
+            command=self.fisheyeButtonPressed)
+        self.fisheyeButton.grid(column=0)
+
     def openFileButtonPressed(self):
         filetypes = {
             "all files":"*.*",
@@ -210,3 +216,6 @@ class App(tk.Tk):
         self.viewer.state.affinepad = not self.viewer.state.affinepad
         relief = ['pressed'] if self.viewer.state.affinepad else ['!pressed']
         self.paddingButton.state(relief)
+
+    def fisheyeButtonPressed(self):
+        pass
