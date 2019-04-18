@@ -66,6 +66,9 @@ class App(tk.Tk):
         self.fisheyeButton.grid(column=0)
 
     def openFileButtonPressed(self):
+        """
+        opens open file dialog to choose an image
+        """
         filetypes = {
             "all files":"*.*",
             "gif files":"*.gif",
@@ -85,6 +88,9 @@ class App(tk.Tk):
             self.viewer.grid(row=0, column=1)
     
     def saveFileButtonPressed(self):
+        """ 
+        opens save file dialog to save image
+        """
         filename = tk.filedialog.asksaveasfilename(
                         initialdir = "./",
                         title = "Select file",
@@ -94,6 +100,9 @@ class App(tk.Tk):
             self.viewer.saveImage(filename)
 
     def resizeButtonPressed(self):
+        """
+        creates dialog box to ask for fx and fy to resize image by
+        """
         if self.viewer is None: return
         # TODO open dialog to ask how much in x and y to resize by
         self.viewer.state.zoom_mode = False
@@ -124,6 +133,11 @@ class App(tk.Tk):
         done.grid()
 
     def rotateButtonPressed(self):
+        """
+        creates dialog box to ask for theta to rotate image by, 
+        center of rotation used is the last clicked coordinate 
+        on the image.
+        """
         if self.viewer is None: return
         self.viewer.state.zoom_mode = False
         center = self.viewer.state.last_clicked_x, self.viewer.state.last_clicked_y
@@ -152,6 +166,11 @@ class App(tk.Tk):
         done.grid()
 
     def affineButtonPressed(self):
+        """
+        creates configuration dialog to ask for 3 points before and after. 
+        Uses the points to create an affine matrix to pass onto the viewer
+        to transform the image
+        """
         if self.viewer is None: return
         # TODO open dialog box for user to enter matrix values manually
         # for i hat, j hat, and offsets
@@ -206,16 +225,26 @@ class App(tk.Tk):
         done.grid()
 
     def zoomButtonPressed(self):
+        """
+        toggles zoom mode for hover zoom on the image
+        """
         if self.viewer is None: return
         self.viewer.state.zoom_mode = not self.viewer.state.zoom_mode
         relief = ['pressed'] if self.viewer.state.zoom_mode else ['!pressed']
         self.zoomButton.state(relief)
     
     def paddingButtonPressed(self):
+        """
+        toggles that affinepad variable in the viewer state object
+        """
         if self.viewer is None: return
         self.viewer.state.affinepad = not self.viewer.state.affinepad
         relief = ['pressed'] if self.viewer.state.affinepad else ['!pressed']
         self.paddingButton.state(relief)
 
     def fisheyeButtonPressed(self):
+        """
+        opens dialog for fisheye configuration and applies fish eye transform
+        """
+        #TODO
         pass
