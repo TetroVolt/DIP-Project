@@ -308,6 +308,55 @@ def perspectiveTransform(src, dst, solveMethod = None):
     return M.reshape((3, 3))
     #raise NotImplementedError()
 
+#Performs Fisheye Transformation on normal Imagee           
+def fisheye(image):
+    #Creates an array of index positions for the image.     
+    x = np.size(image, 0)
+    y = np.size(image, 1)
+
+    r0 = np.arange(y)
+    r1 = np.arange(x)
+
+    out = np.empty((y, x, 2), dtype=float)
+
+    out[:, :, 0] = r0[:, None]
+    out[:, :, 1] = r1
+
+    xy = out
+    #Reshapes array into a a form of x, y coordinate pairs 
+    xy = xy.reshape(-1, 2)
+    #creates final array
+    final = np.zeros((x, y))
+    #Finds Center of the image
+    center = np.mean(xy, axis=0)
+    #create 2 arrays of distances from the cinter for x and y coordinates
+    xc, yc = (xy - center).T
+    
+    # Polar coordinates
+    r = np.sqrt(xc**2 + yc**2)
+    #creates theta array
+    theta = np.arctan2(yc, xc)
+    #changes the radius to the shorter radius for distortion
+    rd = r * 0.8999999999999
+    #normalizes the radius
+    normR = (rd - min(rd)) / (max(rd)-min(rd))
+   
+    #generates new distorted radial distances stretching the image
+    r = rd*(1 + (-.7) * normR) +.5
+    #generates the mask that will be used to map the original image to the new image
+    mask = np.column_stack((r * np.cos(theta), r * np.sin(theta))) + center
+    #Nearest Neighbor Mapping
+    height, width = mask.shape
+    for i in range(0, height):
+        nX = floor(mask[i][0] + .05)
+        nY = floor(mask[i][1] + .05)
+        x = xy[i][0] + .05
+        y = xy[i][1] + .05
+
+        final[nY][nX] = image[floor(y)][floor(x)]
+    #return final image
+    return final           
+
 def warpPerspective(src, M, dsize, dst, flags, borderMode, borderValue):
     raise NotImplementedError()
 
