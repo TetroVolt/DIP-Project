@@ -91,6 +91,8 @@ class App(tk.Tk):
         """ 
         opens save file dialog to save image
         """
+        if self.viewer is None: return
+
         filename = tk.filedialog.asksaveasfilename(
                         initialdir = "./",
                         title = "Select file",
@@ -247,4 +249,5 @@ class App(tk.Tk):
         opens dialog for fisheye configuration and applies fish eye transform
         """
         #TODO
-        pass
+        if self.viewer is None: return
+        self.viewer.fisheye()
