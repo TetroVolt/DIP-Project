@@ -115,6 +115,11 @@ class ImageViewer(tk.Label):
         import scipy.misc
         scipy.misc.imsave(filename, self.np_photo)
 
+    def fisheye(self):
+        temp = lib.fisheye(self.np_photo)
+        self.setImageFromNPArray(temp)
+        self.configure(image=self.photoTK)
+
     def affineTransform(self, mat: np.array):
         rows, cols = self.np_photo.shape
         temp = lib.warpAffine(self.np_photo, mat, (cols,rows), lib.INTER_NEAREST)
