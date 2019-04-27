@@ -1,6 +1,5 @@
 import numpy as np
 import math
-import math
 
 from typing import Tuple
 
@@ -348,13 +347,13 @@ def fisheye(image):
     #Nearest Neighbor Mapping
     height, width = mask.shape
     for i in range(0, height):
-        nX = floor(mask[i][0] + .05)
-        nY = floor(mask[i][1] + .05)
+        nX = math.floor(mask[i][0] + .05)
+        nY = math.floor(mask[i][1] + .05)
         x = xy[i][0] + .05
         y = xy[i][1] + .05
 
-        final[nY][nX] = image[floor(y)][floor(x)]
-    #return final image
+        final[nY][nX] = image[math.floor(y)][math.floor(x)]
+        pass    #return final image
     return final           
 
 def warpPerspective(src, M, dsize, dst, flags, borderMode, borderValue):
