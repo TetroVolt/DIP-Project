@@ -92,9 +92,9 @@ class LibraryTest(test.TestCase):
         lib.shearTransform(self.input_matrix, self.input_matrix)
 
     def test_getPerspectiveTransform(self):
-        src = np.float32([[1,4], [5, 6], [2, 4], [6, 7]])
-        dst = np.float32([[1,1], [2,2], [3, 3], [4, 4]])
-        result = lib.getPerspectiveTransform(src, dst)
+        srcPoints = np.array([[0.0, 0.0], [240.0, 0.0], [240.0, 320.0], [0.0, 320.0]], dtype = np.float32)
+        dstPoints = np.array([[75.0, 75.0], [175.0, 75.0], [175.0, 275.0], [75.0, 275.0]], dtype = np.float32)
+        result = lib.getPerspectiveTransform(srcPoints, dstPoints)
 
     def test_getPerspectiveTransform_badpath(self):
         expected_message = "There must be four source points and four destination points."
