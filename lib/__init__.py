@@ -208,6 +208,10 @@ def __bilinear_interpolation(image: np.array, scale: Tuple[float, float], size: 
 def warpAffine(image: np.array, transform: np.array, size: Tuple[int, int]) -> np.array:
     """
         Apply the affine transformation to an image given a 2x3 transformation matrix.
+        The basic idea is to apply a transform matrix to each pixel, which will offset them
+        by the desired amount.  You multiply the pixel (x, y) vector by 4 elements of the matrix,
+        and then add an offset vector to that.  This will result in different pixels being offset by
+        different amounts.  The formula for it is below in the code.
 
         Args:
             image (:class: array):  The image to perform a transformation on.
