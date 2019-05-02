@@ -219,6 +219,8 @@ def warpAffine(image: np.array, transform: np.array, size: Tuple[int, int]) -> n
         Returns:
             (:class: array):  The transformed image of the specified image.
     """
+    if transform.shape != (2, 3):
+        raise ValueError("Transform Matrix is the incorrect size.")
     rows, columns = image.shape
     output = np.zeros((rows, columns), dtype = np.uint8)
 

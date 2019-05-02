@@ -56,7 +56,12 @@ class LibraryTest(test.TestCase):
         transformation = lib.getRotationMatrix2D((3/2, 3/2), 90, 1)
         lib.warpAffine(self.input_matrix, transformation, (3, 3))
 
-    def test_rotation2D(self):
+    def test_warpAffine_badpath(self):
+        transformation = lib.getRotationMatrix2D((3/2, 3/2), 90, 1)
+        with self.assertRaisesRegex(ValueError, "Transform Matrix is the incorrect size."):
+            lib.warpAffine(self.input_matrix, np.float32([[1,1]]), (3, 3))
+
+    def test_getRotationMatrix2D(self):
         rows, columns = self.input_matrix.shape
 
         alpha = 6.123233995736766e-17
