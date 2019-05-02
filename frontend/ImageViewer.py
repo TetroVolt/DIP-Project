@@ -1,8 +1,8 @@
 
 import tkinter as tk
 import numpy as np
+import lib
 from PIL import Image, ImageTk
-from .Library import lib
 
 class ImageViewer(tk.Label):
     """ 
