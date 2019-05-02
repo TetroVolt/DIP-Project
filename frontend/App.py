@@ -29,12 +29,12 @@ class App(tk.Tk):
             command=self.saveFileButtonPressed)
         self.openFileButton.grid(column=0)
 
-        self.zoomButton = ttk.Button(
-            self.frame,
-            text="Zoom",
-            command=self.zoomButtonPressed)
-        self.zoomButton.grid(column=0)
-
+        # Dictionary with options
+        # Dictionary with options
+        # Dictionary with options
+        # Dictionary with options
+        # Dictionary with options
+        # Dictionary with options
         self.resizeButton = ttk.Button(
             self.frame,
             text="Resize",
@@ -59,11 +59,23 @@ class App(tk.Tk):
             command=self.paddingButtonPressed)
         self.paddingButton.grid(column=0)
 
+        self.perspectiveButton = ttk.Button(
+            self.frame,
+            text="perspective",
+            command=self.perspectiveButtonPressed)
+        self.perspectiveButton.grid(column=0)
+
         self.fisheyeButton = ttk.Button(
             self.frame,
             text="fisheye",
             command=self.fisheyeButtonPressed)
         self.fisheyeButton.grid(column=0)
+
+        tkvar = tk.StringVar(self.frame)
+        choices = ['NEAREST', 'LINEAR' , 'BICUBIC' , 'LANCZOS']
+        self.interpolationMenu = ttk.OptionMenu(self.frame, tkvar, "Choose Interpolation", *choices)
+        self.interpolationMenu.grid(column=0)
+        
 
     def openFileButtonPressed(self):
         """
@@ -100,6 +112,11 @@ class App(tk.Tk):
 
         if filename and self.viewer:
             self.viewer.saveImage(filename)
+
+    def perspectiveButtonPressed(self):
+        if self.viewer is None: return
+
+        pass
 
     def resizeButtonPressed(self):
         """
@@ -192,12 +209,15 @@ class App(tk.Tk):
         pt3_start = tk.Entry(frame)
         pt3_final = tk.Entry(frame)
 
-        pt1_start.grid(row=0, column=0)
-        pt1_final.grid(row=0, column=1)
-        pt2_start.grid(row=1, column=0)
-        pt2_final.grid(row=1, column=1)
-        pt3_start.grid(row=2, column=0)
-        pt3_final.grid(row=2, column=1)
+
+        pt1_start.grid(row=1, column=0)
+        pt1_final.grid(row=1, column=2)
+        pt2_start.grid(row=2, column=0)
+        pt2_final.grid(row=2, column=2)
+        pt3_start.grid(row=3, column=0)
+        pt3_final.grid(row=3, column=2)
+        tk.Label(frame, text="enter 3 points before and after transform\npoints given in form: num,num").grid(row=0, column=0)
+        tk.Label(frame, text=">").grid(row=2, column=1)
 
         def doneAction():
             pt1_s, pt1_f = pt1_start.get(), pt1_final.get()
