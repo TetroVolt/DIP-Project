@@ -279,7 +279,19 @@ def shearTransform(src, dst):
     M = np.linalg.solve(m, n)
     return M.reshape(2, 3)
 
-def getPerspectiveTransform(src, dst, solveMethod = None):
+def getPerspectiveTransform(src: np.array, dst: np.array, solveMethod=None) -> np.array:
+    """
+        The calculates the 3x3 transformation matrix to be passed into "warpPerspective".
+
+        Args:
+            src (:class: np.array):  A set of 4 source coordinates to start the warp from.
+
+            dst (:class: np.array): A set of 4 destination coordinates to scale everything to.
+
+        Returns:
+            (:class: np.array):  A 3x3 transformation matrix.
+    """
+    # Sanity check the input.
     if src.shape != (4, 2) or dst.shape != (4, 2):
         raise ValueError("There must be four source points and four destination points.")
 
@@ -303,8 +315,16 @@ def getPerspectiveTransform(src, dst, solveMethod = None):
     M[8] = 1
     return M.reshape((3, 3))
 
-#Performs Fisheye Transformation on normal Images
-def fisheye(image):
+def fisheye(image: np.array) -> np.array:
+    """
+        Create a "fisheye" distortion on the provided image.
+
+        Args:
+            image (:class: np.array):  The image to distort.
+
+        Returns:
+            (:class: np.array):  The distorted image.
+    """
     #Creates an array of index positions for the image.
     x = np.size(image, 0)
     y = np.size(image, 1)
@@ -353,6 +373,10 @@ def fisheye(image):
     return final
 
 def warpPerspective(src, M, dsize, dst, flags, borderMode, borderValue):
+    """
+        Creates a scaled and/or rotated version of an image using a set of 4 coordinate source points and
+        4 coordinate destination points.  Straight lines remain straight during this process.
+    """
     raise NotImplementedError()
 
 def get_exports() -> dict:
