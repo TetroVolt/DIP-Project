@@ -82,17 +82,25 @@ class LibraryTest(test.TestCase):
         truth, msg = self.assert_array(expected, result)
         self.assertTrue(truth, "1, 1 matrix was invalid. {}".format(msg))
 
-    def test_shear_transform(self):
+    def test_shearTransform(self):
         #TODO-Add assertions on expected output.
-        lib.shear_transform(self.input_matrix, 0)
+        lib.shearTransform(self.input_matrix, self.input_matrix)
 
-    def test_get_perspective_transform(self):
-        #TODO-Add assertions on expected output.
-        lib.perspective_transform(self.input_matrix, 0)
+    def test_getPerspectiveTransform(self):
+        src = np.float32([[1,4], [5, 6], [2, 4], [6, 7]])
+        dst = np.float32([[1,1], [2,2], [3, 3], [4, 4]])
+        result = lib.getPerspectiveTransform(src, dst)
 
-    def test_warp_perspective(self):
+    def test_getPerspectiveTransform_badpath(self):
+        expected_message = "There must be four source points and four destination points."
+        with self.assertRaisesRegex(ValueError, expected_message):
+            src = np.float32([[1,4], [5, 6]])
+            dst = np.float32([[1,1], [2,2]])
+            lib.getPerspectiveTransform(src, dst)
+
+    def test_warpPerspective(self):
         #TODO-Add assertions on expected output.
-        lib.warp_perspective(self.input_matrix, 0, 0, 0, 0, 0, 0)
+        lib.warpPerspective(self.input_matrix, 0, 0, 0, 0, 0, 0)
 
     def test_exports(self):
         exports = lib.get_exports()

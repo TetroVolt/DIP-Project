@@ -264,7 +264,6 @@ def getRotationMatrix2D(center: Tuple[float, float], angle: float, scale: float,
                      [-beta, alpha, shift_y]], dtype=np.float)
 
 def shearTransform(src, dst):
-
     m = np.zeros((6, 6))
     n = np.zeros((6))
     for i in range(3):
@@ -280,11 +279,10 @@ def shearTransform(src, dst):
 
     M = np.linalg.solve(m, n)
     return M.reshape(2, 3)
-    #raise NotImplementedError()
 
-def perspectiveTransform(src, dst, solveMethod = None):
-    #if srcPoints.shape != (4, 2)   or dstPoints.shape != (4, 2):
-    #raise ValueError("There must be four source points and four destination points")
+def getPerspectiveTransform(src, dst, solveMethod = None):
+    if src.shape != (4, 2) or dst.shape != (4, 2):
+        raise ValueError("There must be four source points and four destination points.")
 
     m = np.zeros((8, 8))
     n = np.zeros((8))
@@ -305,11 +303,10 @@ def perspectiveTransform(src, dst, solveMethod = None):
     M.resize((9,), refcheck = False)
     M[8] = 1
     return M.reshape((3, 3))
-    #raise NotImplementedError()
 
-#Performs Fisheye Transformation on normal Imagee           
+#Performs Fisheye Transformation on normal Images
 def fisheye(image):
-    #Creates an array of index positions for the image.     
+    #Creates an array of index positions for the image.
     x = np.size(image, 0)
     y = np.size(image, 1)
 
@@ -322,7 +319,7 @@ def fisheye(image):
     out[:, :, 1] = r1
 
     xy = out
-    #Reshapes array into a a form of x, y coordinate pairs 
+    #Reshapes array into a a form of x, y coordinate pairs
     xy = xy.reshape(-1, 2)
     #creates final array
     final = np.zeros((x, y))
@@ -330,7 +327,7 @@ def fisheye(image):
     center = np.mean(xy, axis=0)
     #create 2 arrays of distances from the cinter for x and y coordinates
     xc, yc = (xy - center).T
-    
+
     # Polar coordinates
     r = np.sqrt(xc**2 + yc**2)
     #creates theta array
@@ -339,7 +336,7 @@ def fisheye(image):
     rd = r * 0.8999999999999
     #normalizes the radius
     normR = (rd - min(rd)) / (max(rd)-min(rd))
-   
+
     #generates new distorted radial distances stretching the image
     r = rd*(1 + (-.7) * normR) +.5
     #generates the mask that will be used to map the original image to the new image
@@ -354,7 +351,7 @@ def fisheye(image):
 
         final[nY][nX] = image[math.floor(y)][math.floor(x)]
         pass    #return final image
-    return final           
+    return final
 
 def warpPerspective(src, M, dsize, dst, flags, borderMode, borderValue):
     raise NotImplementedError()
@@ -368,6 +365,7 @@ def get_exports() -> dict:
         "warpAffine" : warpAffine,
         "getRotationMatrix2D": getRotationMatrix2D,
         "shearTransform": shearTransform,
-        "perspectiveTransform": perspectiveTransform,
+        "getPerspectiveTransform": getPerspectiveTransform,
         "warpPerspective": warpPerspective,
     }
+
