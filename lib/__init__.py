@@ -34,12 +34,12 @@ def resize(image: np.array, output_size: Tuple[int, int],
     scale_y = float(new_rows) / rows
     scale_x = float(new_columns) / columns
     if interpolation ==  INTER_LINEAR:
-        return bilinear_interpolation(image, (scale_y, scale_x), (new_rows, new_columns))
+        return __bilinear_interpolation(image, (scale_y, scale_x), (new_rows, new_columns))
 
     elif interpolation == INTER_NEIGHBOR:
-        return nearest_neighbor(image, (scale_y, scale_x), (new_rows, new_columns))
+        return __nearest_neighbor(image, (scale_y, scale_x), (new_rows, new_columns))
 
-def nearest_neighbor(image: np.array, scale: Tuple[float, float], size: Tuple[int, int]) -> np.array:
+def __nearest_neighbor(image: np.array, scale: Tuple[float, float], size: Tuple[int, int]) -> np.array:
     """
         Performs a neartest neighbor scaling of the desired image.
 
@@ -82,7 +82,7 @@ def nearest_neighbor(image: np.array, scale: Tuple[float, float], size: Tuple[in
             new_image[row_iter, column_iter] = image[nearest_y, nearest_x]
     return new_image
 
-def interpolate(right: int, mapped_val: float, left: int, pixel1: int, pixel2: int) -> float:
+def __interpolate(right: int, mapped_val: float, left: int, pixel1: int, pixel2: int) -> float:
     """
         Performs the interpolation mathematics.
 
@@ -105,7 +105,7 @@ def interpolate(right: int, mapped_val: float, left: int, pixel1: int, pixel2: i
     return ((right - mapped_val) / (right - left)) * pixel1 + \
            ((mapped_val - left) / (right - left)) * pixel2
 
-def bilinear_interpolation(image: np.array, scale: Tuple[float, float], size: Tuple[int, int]) -> np.array:
+def __bilinear_interpolation(image: np.array, scale: Tuple[float, float], size: Tuple[int, int]) -> np.array:
     """
         Performs a bilinear interpolation rescaling of the desired image.
         Formula obtained from Wikipedia here: https://en.wikipedia.org/wiki/Bilinear_interpolation
@@ -165,46 +165,45 @@ def bilinear_interpolation(image: np.array, scale: Tuple[float, float], size: Tu
                     # r1 and r2 is out of bounds for the next x, so just use the values from the previous
                     # column and the column we are currently on.  The four closest real pixels
                     # would still be these values.
-                    r1 = interpolate(right_x, mapped_x, left_x,
-                                     image[top_y, left_x-1], image[top_y, left_x])
+                    r1 = __interpolate(right_x, mapped_x, left_x,
+                                       image[top_y, left_x-1], image[top_y, left_x])
 
-                    r2 = interpolate(right_x, mapped_x, left_x,
-                                     image[bottom_y, left_x-1], image[bottom_y, left_x])
+                    r2 = __interpolate(right_x, mapped_x, left_x,
+                                       image[bottom_y, left_x-1], image[bottom_y, left_x])
 
                 # We are at the bottom edge of the original image.
                 elif left_x < columns-1 and top_y == rows-1:
                     # r2 is out of bounds for the next y, so just use the values from the row above for
                     # r1, and r2 will be the row that are currently on.  The four closest real pixels
                     # would still be these values.
-                    r1 = interpolate(right_x, mapped_x, left_x,
-                                     image[top_y-1, left_x], image[top_y-1, right_x])
+                    r1 = __interpolate(right_x, mapped_x, left_x,
+                                       image[top_y-1, left_x], image[top_y-1, right_x])
 
-                    r2 = interpolate(right_x, mapped_x, left_x,
-                                     image[top_y, left_x], image[top_y, right_x])
+                    r2 = __interpolate(right_x, mapped_x, left_x,
+                                       image[top_y, left_x], image[top_y, right_x])
 
                 # We are at the bottom right corner of the original image.
                 elif left_x == columns-1 and top_y == rows-1:
                     # Use the current nearest pixel as the bottom right corner of our interpolation.
-                    r1 = interpolate(right_x, mapped_x, left_x,
-                                     image[top_y-1, left_x-1], image[top_y-1, left_x])
+                    r1 = __interpolate(right_x, mapped_x, left_x,
+                                       image[top_y-1, left_x-1], image[top_y-1, left_x])
 
-                    r2 = interpolate(right_x, mapped_x, left_x,
-                                     image[top_y, left_x-1], image[top_y, left_x])
+                    r2 = __interpolate(right_x, mapped_x, left_x,
+                                       image[top_y, left_x-1], image[top_y, left_x])
                 # It's not a corner or an edge, so calculate using four known points.
                 else:
-                    r1 = interpolate(right_x, mapped_x, left_x,
-                                     image[top_y, left_x], image[top_y, right_x])
+                    r1 = __interpolate(right_x, mapped_x, left_x,
+                                       image[top_y, left_x], image[top_y, right_x])
 
-                    r2 = interpolate(right_x, mapped_x, left_x,
-                                     image[bottom_y, left_x], image[bottom_y, right_x])
+                    r2 = __interpolate(right_x, mapped_x, left_x,
+                                       image[bottom_y, left_x], image[bottom_y, right_x])
 
                 # This is our P value.
-                new_pixel = interpolate(bottom_y, mapped_y, top_y, r1, r2)
+                new_pixel = __interpolate(bottom_y, mapped_y, top_y, r1, r2)
 
             new_image[row_iter, column_iter] = new_pixel
 
     return new_image
-
 
 def warpAffine(image: np.array, transform: np.array, size: Tuple[int, int]) -> np.array:
     """
@@ -350,7 +349,7 @@ def fisheye(image):
         y = xy[i][1] + .05
 
         final[nY][nX] = image[math.floor(y)][math.floor(x)]
-        pass    #return final image
+    #return final image
     return final
 
 def warpPerspective(src, M, dsize, dst, flags, borderMode, borderValue):
@@ -367,5 +366,6 @@ def get_exports() -> dict:
         "shearTransform": shearTransform,
         "getPerspectiveTransform": getPerspectiveTransform,
         "warpPerspective": warpPerspective,
+        "fisheye": fisheye
     }
 

@@ -104,10 +104,9 @@ class LibraryTest(test.TestCase):
 
     def test_exports(self):
         exports = lib.get_exports()
-        blacklist = ["np", "get_exports", "test_library"]
+        blacklist = ["np", "get_exports", "test_library", "INTER_NEAREST", "INTER_LINEAR", "Tuple", "math"]
         # Get all the functions and attributes of the module, and filter by only the public functions.
         function_names = [attr for attr in dir(lib) if "__" not in attr and attr not in blacklist]
-        functions = []
         for key in exports:
             index = function_names.index(key)
             # Ensure that the function is the same as it's key name.
@@ -115,5 +114,5 @@ class LibraryTest(test.TestCase):
                             msg="Key is not the same as it's function.")
 
         # Make sure all of the public functions were in the dictionary.  If not, assert.
-        self.assertFalse(functions, msg="Not enough keys for all public functions.")
+        self.assertFalse(function_names, msg="Not enough keys for all public functions.")
 
