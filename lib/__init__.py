@@ -274,7 +274,6 @@ def __bicubic_interpolation(image: np.array, scale: Tuple[float, float], size: T
     cv2.imwrite('padded.jpg', padded_image)
 
     for row_iter in range(0, new_rows):
-        print("Row:  " + str(row_iter))
         for column_iter in range(0, new_columns):
 
             # This is where the new_image pixel is on the old image.
@@ -696,7 +695,7 @@ def warpPerspective(image, transform, dsize,
                     # This one's easy, just find the closest points.
                     output[row, column] = image[int(round(mapped_y)), int(round(mapped_x))]
 
-                elif interpolation == INTER_LINEAR:
+                elif flags[0] == INTER_LINEAR:
                     left_x, right_x = int_x, int_x+1
                     top_y, bottom_y = int_y, int_y+1
 
@@ -709,7 +708,7 @@ def warpPerspective(image, transform, dsize,
                     # Interpolate the Y value and assign it to the image.
                     output[row, column] = __interpolate(bottom_y, mapped_y, top_y, r1, r2)
 
-                elif interpolation == INTER_CUBIC:
+                elif flags[0] == INTER_CUBIC:
                     # Matrix of 16 samples for cubic interpolation.
                     x_coord = [int_x-1,int_x,int_x+1,int_x+2]
                     y_coord = [int_y-1,int_y,int_y+1,int_y+2]
