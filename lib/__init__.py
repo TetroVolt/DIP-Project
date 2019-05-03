@@ -35,6 +35,7 @@ def resize(image: np.array, output_size: Tuple[int, int],
                                   INTER_NEAREST = Nearest Neighbors
                                   INTER_LINEAR = Bilinear
                                   INTER_CUBIC = Bicubic
+                                  INTER_LANCZOS4 = Lanczos4
                                   Defaults to bilinear.
 
         Returns:
