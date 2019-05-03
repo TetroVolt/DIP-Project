@@ -1,12 +1,12 @@
 import numpy as np
 import math
+
 from typing import Tuple
 
 # Enums for picking the interpolation method.
 INTER_NEAREST = 0
 INTER_LINEAR = 1
 INTER_CUBIC = 2
-INTER_LANCZOS4 = 3
 
 # Enums for use in the warpPerspective function to choose
 # how the border is dealt with.
@@ -51,9 +51,6 @@ def resize(image: np.array, output_size: Tuple[int, int],
 
     elif interpolation == INTER_CUBIC:
         return __bicubic_interpolation(image, (scale_y, scale_x), (new_rows, new_columns))
-
-    elif interpolation == INTER_LANCZOS4:
-        return __lanczos4_interpolation(image, (scale_y, scale_x), (new_rows, new_columns))
 
 def __nearest_neighbor(image: np.array, scale: Tuple[float, float], size: Tuple[int, int]) -> np.array:
     """
@@ -406,7 +403,6 @@ def __warp_cubic(x_array, y_coord, image, x):
 
     return __cubic_interpolation(x_array, intensity_array, x)
 
-
 def warpAffine(image: np.array, transform: np.array, size: Tuple[int, int], interpolation: int) -> np.array:
     """
         Apply the affine transformation to an image given a 2x3 transformation matrix.
@@ -631,7 +627,7 @@ def getPerspectiveTransform(src: np.array, dst: np.array, solveMethod=None) -> n
     # Reshape it to be the needed 3,3 matrix.
     return transform_matrix.reshape((3, 3))
 
-def warpPerspective(image, transform_matrix, dsize,
+def warpPerspective(image, transform, dsize,
                     flags=(INTER_LINEAR, 0), borderMode=BORDER_CONSTANT, borderValue=0):
     """
         Creates a scaled and/or rotated version of an image using a set of 4 coordinate source points and
@@ -641,8 +637,7 @@ def warpPerspective(image, transform_matrix, dsize,
         Args:
             image (:class: np.array):  The source image to transform
 
-            transform_matrix (:class: np.array):  A 3X3 transformation array obtained via
-                "getPerspectiveTransform".
+            transform (:class: np.array):  A 3X3 transformation array obtained via "getPerspectiveTransform".
 
             dsize (:class: tuple):  The size of the new image.
         KArgs:
@@ -655,7 +650,7 @@ def warpPerspective(image, transform_matrix, dsize,
             borderValue (:class: int):  If BORDER_CONSTANT is used, this is the value to be used around the
                 border of the image.  Defaults to 0 (black).
     """
-    if transform_matrix.shape != (3, 3):
+    if transform.shape != (3, 3):
         raise ValueError("Transform Matrix must be 3X3")
     rows, columns = image.shape
     new_rows, new_columns = dsize
@@ -663,7 +658,7 @@ def warpPerspective(image, transform_matrix, dsize,
     # we would use this instead.  If BORDER_REPLICATE is desired, handle that below.
     output = np.full((new_rows, new_columns), borderValue, dtype = np.uint8)
 
-    transform_matrix = np.linalg.inv(transform_matrix)
+    transform = np.linalg.inv(transform)
 
     for row in range(0, new_rows):
         for column in range(0, new_columns):
@@ -673,10 +668,10 @@ def warpPerspective(image, transform_matrix, dsize,
             # and the pixel value would be obtained from the old image.
             # [new x] = [(M11 * x + M12 * y + M13)/(M31 * x + M32 * y + M33)]
             # [new y]   [(M21 * x + M22 * y + M23)/(M31 * x + M32 * y + M33)]
-            mapped_x = (transform_matrix[0, 0] * column + transform_matrix[0, 1] * row + transform_matrix[0, 2]) / \
-                       (transform_matrix[2, 0] * column + transform_matrix[2, 1] * row + transform_matrix[2, 2])
-            mapped_y = (transform_matrix[1, 0] * column + transform_matrix[1, 1] * row + transform_matrix[1, 2]) / \
-                       (transform_matrix[2, 0] * column + transform_matrix[2, 1] * row + transform_matrix[2, 2])
+            mapped_x = (transform[0, 0] * column + transform[0, 1] * row + transform[0, 2]) / \
+                       (transform[2, 0] * column + transform[2, 1] * row + transform[2, 2])
+            mapped_y = (transform[1, 0] * column + transform[1, 1] * row + transform[1, 2]) / \
+                       (transform[2, 0] * column + transform[2, 1] * row + transform[2, 2])
 
             # Ensure we don't go out of bounds of the image.
             # If we go outside the bounds, the result will just be 0, as the image
@@ -702,3 +697,4 @@ def get_exports() -> dict:
         "warpPerspective": warpPerspective,
         "fisheye": fisheye
     }
+
