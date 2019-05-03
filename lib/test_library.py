@@ -54,12 +54,12 @@ class LibraryTest(test.TestCase):
     def test_warpAffine(self):
         #TODO-Add assertions on expected output.
         transformation = lib.getRotationMatrix2D((3/2, 3/2), 90, 1)
-        lib.warpAffine(self.input_matrix, transformation, (3, 3))
+        lib.warpAffine(self.input_matrix, transformation, (3, 3), lib.INTER_LINEAR)
 
     def test_warpAffine_badpath(self):
         transformation = lib.getRotationMatrix2D((3/2, 3/2), 90, 1)
         with self.assertRaisesRegex(ValueError, "Transform Matrix is the incorrect size."):
-            lib.warpAffine(self.input_matrix, np.float32([[1,1]]), (3, 3))
+            lib.warpAffine(self.input_matrix, np.float32([[1,1]]), (3, 3), lib.INTER_NEAREST)
 
     def test_getRotationMatrix2D(self):
         rows, columns = self.input_matrix.shape
@@ -92,9 +92,15 @@ class LibraryTest(test.TestCase):
         lib.shearTransform(self.input_matrix, self.input_matrix)
 
     def test_getPerspectiveTransform(self):
-        srcPoints = np.array([[0.0, 0.0], [240.0, 0.0], [240.0, 320.0], [0.0, 320.0]], dtype = np.float32)
-        dstPoints = np.array([[75.0, 75.0], [175.0, 75.0], [175.0, 275.0], [75.0, 275.0]], dtype = np.float32)
+        srcPoints = np.float32([[56,65], [368,52], [28,387], [389,390]])
+        dstPoints = np.float32([[0,0], [300,0], [0,300], [300,300]])
+        expected = np.float64([[1.0558737612964193,  0.09181510967794954, -65.0969127616662],
+                              [0.046901004937543685,  1.1256241185010436, -75.79202397907027],
+                              [0.00018325144816951961,  0.0005133370013304123,  1.0]])
+
         result = lib.getPerspectiveTransform(srcPoints, dstPoints)
+        truth, msg = self.assert_array(expected, result)
+        self.assertTrue(truth, "Transform Matrix was not the same. {}".format(msg))
 
     def test_getPerspectiveTransform_badpath(self):
         expected_message = "There must be four source points and four destination points."
@@ -105,11 +111,16 @@ class LibraryTest(test.TestCase):
 
     def test_warpPerspective(self):
         #TODO-Add assertions on expected output.
-        lib.warpPerspective(self.input_matrix, 0, 0, 0, 0, 0, 0)
+        srcPoints = np.float32([[56,65], [368,52], [28,387], [389,390]])
+        dstPoints = np.float32([[0,0], [300,0], [0,300], [300,300]])
+
+        transform = lib.getPerspectiveTransform(srcPoints, dstPoints)
+        lib.warpPerspective(self.input_matrix, transform, (500, 500))
 
     def test_exports(self):
         exports = lib.get_exports()
-        blacklist = ["np", "get_exports", "test_library", "INTER_NEAREST", "INTER_LINEAR", "Tuple", "math"]
+        blacklist = ["np", "math", "Tuple", "get_exports", "test_library", "INTER_NEAREST", "INTER_LINEAR", "INTER_CUBIC",
+                     "BORDER_CONSTANT", "BORDER_REPLICATE"]
         # Get all the functions and attributes of the module, and filter by only the public functions.
         function_names = [attr for attr in dir(lib) if "__" not in attr and attr not in blacklist]
         for key in exports:
