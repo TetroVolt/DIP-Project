@@ -1,7 +1,7 @@
 
 import tkinter as tk
 import numpy as np
-import lib
+from .Library import lib
 from PIL import Image, ImageTk
 
 class ImageViewer(tk.Label):
@@ -17,6 +17,7 @@ class ImageViewer(tk.Label):
             self.last_clicked_x, self.last_clicked_y = 0,0
             self.set_default_homology(shape)
             self.affinepad = False
+            self.interpolation = lib.INTER_NEAREST
             
         def set_default_homology(self, shape=None):
             if shape:
@@ -44,6 +45,7 @@ class ImageViewer(tk.Label):
         self.np_photo = np.array(self.photo)
         self.photoTK = ImageTk.PhotoImage(self.photo)
         self.state = ImageViewer.State(self.np_photo.shape)
+        assert(len(self.np_photo.shape)==2)
 
     def setImageFromNPArray(self, nparray: np.ndarray):
         assert(isinstance(nparray, np.ndarray))
@@ -53,6 +55,15 @@ class ImageViewer(tk.Label):
         self.photo = Image.fromarray(self.np_photo)
         self.photoTK = ImageTk.PhotoImage(self.photo)
         #self.state = ImageViewer.State(self.np_photo.shape)
+
+    def setInterpolation(self, inter):
+        choices = {
+            'NEAREST':lib.INTER_NEAREST, 
+            'LINEAR': lib.INTER_LINEAR,
+            'CUBIC': lib.INTER_CUBIC,
+            'LANCZOS4': lib.INTER_LANCZOS4 }
+        
+        self.state.interpolation = choices[inter]
 
     def recalculateImageBounds(self):
         """
@@ -76,9 +87,9 @@ class ImageViewer(tk.Label):
         Y = min(max(safe_min_y, Y), safe_max_y)
         temp =  self.np_photo[Y-safe_min_y:Y+safe_min_y,X-safe_min_x:X+safe_min_x]
         temp = lib.resize(
-                temp,
+                src=temp,
                 dsize=(label_w, label_h),
-                interpolation=lib.INTER_NEAREST)
+                interpolation=self.state.interpolation)
 
         self.photo = Image.fromarray(temp)
         self.photoTK = ImageTk.PhotoImage(self.photo)
@@ -120,10 +131,17 @@ class ImageViewer(tk.Label):
         self.setImageFromNPArray(temp)
         self.configure(image=self.photoTK)
 
+    def warpPerspective(self, mat: np.array):
+        rows, cols = self.np_photo.shape
+        temp = lib.warpPerspective(self.np_photo, mat, (cols,rows), self.state.interpolation)
+        self.state.set_default_homology(self.np_photo.shape)
+        self.setImageFromNPArray(temp)
+        self.configure(image=self.photoTK)
+
     def affineTransform(self, mat: np.array):
         rows, cols = self.np_photo.shape
-        temp = lib.warpAffine(self.np_photo, mat, (cols,rows), lib.INTER_NEAREST)
-        #self.state.set_default_homology(self.np_photo.shape)
+        temp = lib.warpAffine(self.np_photo, mat, (cols,rows), self.state.interpolation)
+        self.state.set_default_homology(self.np_photo.shape)
         self.setImageFromNPArray(temp)
         self.configure(image=self.photoTK)
 
@@ -142,7 +160,7 @@ class ImageViewer(tk.Label):
         mat[0,2] -= min_x
         mat[1,2] -= min_y
 
-        temp = lib.warpAffine(self.np_photo, mat, dst_shape, lib.INTER_NEAREST)
+        temp = lib.warpAffine(self.np_photo, mat, dst_shape, self.state.interpolation)
         self.setImageFromNPArray(temp)
         self.configure(image=self.photoTK)
 

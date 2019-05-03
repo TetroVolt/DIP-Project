@@ -16,21 +16,29 @@ class Library:
     Library Dependency Injection
     """
     def __init__(self, source:str="opencv"):
+        self.source = source
+
+        import sys
+        sys.path.append('../')
+        import lib
+        import cv2
+        self.lib = lib
+        self.cv2 = cv2
+
         if source == "opencv":
-            import cv2
-            self.lib = cv2
+            self.libsource = cv2
         elif source == "library":
-            import sys
-            sys.path.append('../')
-            import lib
-            self.lib = lib
+            self.libsource = lib
         elif isinstance(source, str):
             raise ValueError("source argument must either be 'opencv' or 'library'")
         else:
             raise TypeError("source argument must be of type str")    
 
     def __getattr__(self, attr):
-        return self.lib.__getattribute__(attr)
+        if attr == 'fisheye':
+            return self.lib.fisheye
+        else:
+            return self.libsource.__getattribute__(attr)
 
 Library = SingletonDecorator(Library)
 lib = Library('opencv')

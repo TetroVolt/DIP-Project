@@ -71,11 +71,19 @@ class App(tk.Tk):
             command=self.fisheyeButtonPressed)
         self.fisheyeButton.grid(column=0)
 
-        tkvar = tk.StringVar(self.frame)
-        choices = ['NEAREST', 'LINEAR' , 'BICUBIC' , 'LANCZOS']
-        self.interpolationMenu = ttk.OptionMenu(self.frame, tkvar, "Choose Interpolation", *choices)
-        self.interpolationMenu.grid(column=0)
-        
+        self.zoomButton = ttk.Button(
+            self.frame,
+            text="Zoom",
+            command=self.zoomButtonPressed)
+        self.zoomButton.grid(column=0)
+
+        self.interpolationMenu = tk.StringVar(self.frame)
+        choices = ['NEAREST', 'LINEAR' , 'CUBIC' , 'LANCZOS4']
+        self.interOptionMenu = ttk.OptionMenu(self.frame, self.interpolationMenu, "Choose Interpolation", *choices)
+        self.interOptionMenu.grid(column=0)
+        self.interOptionMenu.configure(state='disabled')
+        self.interpolationMenu.trace('w',self.interpolationMenuChoice)
+
 
     def openFileButtonPressed(self):
         """
@@ -98,6 +106,8 @@ class App(tk.Tk):
             else:
                 self.viewer.setImage(filename)
             self.viewer.grid(row=0, column=1)
+
+            self.interOptionMenu.configure(state='enabled')
     
     def saveFileButtonPressed(self):
         """ 
@@ -114,9 +124,69 @@ class App(tk.Tk):
             self.viewer.saveImage(filename)
 
     def perspectiveButtonPressed(self):
+        """
+        creates configuration dialog to ask for 3 points before and after. 
+        Uses the points to create an affine matrix to pass onto the viewer
+        to transform the image
+        """
         if self.viewer is None: return
+        # TODO open dialog box for user to enter matrix values manually
+        # for i hat, j hat, and offsets
 
-        pass
+        self.viewer.state.zoom_mode = False
+        center = self.viewer.state.last_clicked_x, self.viewer.state.last_clicked_y
+
+        root = tk.Tk()
+        root.attributes('-type', 'dialog')
+        frame = ttk.Frame(root, padding=20)
+        frame.grid()
+
+        pt1_start = tk.Entry(frame)
+        pt1_final = tk.Entry(frame)
+        pt2_start = tk.Entry(frame)
+        pt2_final = tk.Entry(frame)
+        pt3_start = tk.Entry(frame)
+        pt3_final = tk.Entry(frame)
+        pt4_start = tk.Entry(frame)
+        pt4_final = tk.Entry(frame)
+
+        pt1_start.grid(row=1, column=0)
+        pt1_final.grid(row=1, column=2)
+        pt2_start.grid(row=2, column=0)
+        pt2_final.grid(row=2, column=2)
+        pt3_start.grid(row=3, column=0)
+        pt3_final.grid(row=3, column=2)
+        pt4_start.grid(row=4, column=0)
+        pt4_final.grid(row=4, column=2)
+        tk.Label(frame, text="enter 4 points before and after transform\npoints given in form: num,num").grid(row=0, column=0)
+        tk.Label(frame, text=">").grid(row=2, column=1)
+
+        def doneAction():
+            pt1_s, pt1_f = pt1_start.get(), pt1_final.get()
+            pt2_s, pt2_f = pt2_start.get(), pt2_final.get()
+            pt3_s, pt3_f = pt3_start.get(), pt3_final.get()
+            pt4_s, pt4_f = pt4_start.get(), pt4_final.get()
+
+            pts = [pt1_s, pt2_s, pt3_s, pt4_s, pt1_f, pt2_f, pt3_f, pt4_f]
+
+            try:
+                pts = [[float(c) for c in pt.split(',')] for pt in pts]
+                if (any(len(pt)!=2 for pt in pts)): return
+            except:
+                print("invalid pts")
+                return
+
+            pt1_s, pt2_s, pt3_s, pt4_s, pt1_f, pt2_f, pt3_f, pt4_f = pts
+            start = np.float32([pt1_s, pt2_s, pt3_s, pt4_s])
+            end = np.float32([pt1_f, pt2_f, pt3_f, pt4_f])
+            mat = lib.getPerspectiveTransform(start, end)
+
+            self.viewer.warpPerspective(mat)
+
+            root.destroy()
+
+        done = tk.Button(frame, text="done", command=doneAction)
+        done.grid()
 
     def resizeButtonPressed(self):
         """
@@ -209,7 +279,6 @@ class App(tk.Tk):
         pt3_start = tk.Entry(frame)
         pt3_final = tk.Entry(frame)
 
-
         pt1_start.grid(row=1, column=0)
         pt1_final.grid(row=1, column=2)
         pt2_start.grid(row=2, column=0)
@@ -271,3 +340,9 @@ class App(tk.Tk):
         #TODO
         if self.viewer is None: return
         self.viewer.fisheye()
+
+    def interpolationMenuChoice(self, *args):
+        #print(self.interpolationMenu.get())
+        if self.viewer is None: return
+        interpolation = self.interpolationMenu.get()
+        self.viewer.setInterpolation(interpolation)
