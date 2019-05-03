@@ -3,9 +3,15 @@ import math
 
 from typing import Tuple
 
+# Enums for picking the interpolation method.
 INTER_NEAREST = 0
 INTER_LINEAR = 1
 INTER_CUBIC = 2
+
+# Enums for use in the warpPerspective function to choose
+# how the border is dealt with.
+BORDER_CONSTANT = 0
+BORDER_REPLICATE = 1
 
 def resize(image: np.array, output_size: Tuple[int, int],
            dst=None, fx=None, fy=None, interpolation: int=INTER_LINEAR) -> np.array:
@@ -43,7 +49,7 @@ def resize(image: np.array, output_size: Tuple[int, int],
     elif interpolation == INTER_NEIGHBOR:
         return __nearest_neighbor(image, (scale_y, scale_x), (new_rows, new_columns))
 
-     elif interpolation == INTER_CUBIC:
+    elif interpolation == INTER_CUBIC:
         return __bicubic_interpolation(image, (scale_y, scale_x), (new_rows, new_columns))
 
 def __nearest_neighbor(image: np.array, scale: Tuple[float, float], size: Tuple[int, int]) -> np.array:
@@ -331,11 +337,9 @@ def warpAffine(image: np.array, transform: np.array, size: Tuple[int, int], inte
     rows, columns = image.shape
     output = np.zeros((rows, columns), dtype = np.uint8)
 
-    if output.shape > image.shape:
-        image = resize(image, output)
-
     for row in range(0, rows):
         for column in range(0, columns):
+            # Formula used:
             # [x'] = [a b][x]+[t1] Where [a b t1] is the transform matrix.
             # [y']   [c d][y] [t2]       [c d t2]
 
@@ -353,7 +357,9 @@ def warpAffine(image: np.array, transform: np.array, size: Tuple[int, int], inte
 
                 # If we get a mapped value that is not an exact coordinate, we need to interpolate.
                 if interpolation == INTER_NEAREST:
-                    output[row, column] = image[round(mapped_y), round(mapped_x)]
+                    # This one's easy, just find the closest points.
+                    output[row, column] = image[int(round(mapped_y)), int(round(mapped_x))]
+
                 elif interpolation == INTER_LINEAR:
                     left_x, right_x = int(mapped_x), int(mapped_x)+1
                     top_y, bottom_y = int(mapped_y), int(mapped_y)+1
@@ -364,24 +370,25 @@ def warpAffine(image: np.array, transform: np.array, size: Tuple[int, int], inte
                     r2 = __interpolate(right_x, mapped_x, left_x,
                                        image[top_y, left_x-1], image[top_y, left_x])
 
-                    # Interpolate the Y value and assigne it to the image.
+                    # Interpolate the Y value and assign it to the image.
                     output[row, column] = __interpolate(bottom_y, mapped_y, top_y, r1, r2)
 
-            elif interpolation == INTER_CUBIC:
-                # Matrix of 16 samples for cubic interpolation
-                x_coord = [home_x_p-1,home_x_p,home_x_p+1,home_x_p+2]
-                y_coord = [home_y_p-1,home_y_p,home_y_p+1,home_y_p+2]
-                sample_matrix = padded_image[y_coord[0]:y_coord[3]+1,x_coord[0]:x_coord[3]+1]
+                # TODO FIX!!
+                elif interpolation == INTER_CUBIC:
+                    # Matrix of 16 samples for cubic interpolation.
+                    x_coord = [home_x_p-1,home_x_p,home_x_p+1,home_x_p+2]
+                    y_coord = [home_y_p-1,home_y_p,home_y_p+1,home_y_p+2]
+                    sample_matrix = padded_image[y_coord[0]:y_coord[3]+1,x_coord[0]:x_coord[3]+1]
 
-                r1 = __cubic_interpolation(x_coord, sample_matrix[0], mapped_x+2)
+                    r1 = __cubic_interpolation(x_coord, sample_matrix[0], mapped_x+2)
 
-                r2 = __cubic_interpolation(x_coord, sample_matrix[1], mapped_x+2)
+                    r2 = __cubic_interpolation(x_coord, sample_matrix[1], mapped_x+2)
 
-                r3 = __cubic_interpolation(x_coord, sample_matrix[2], mapped_x+2)
+                    r3 = __cubic_interpolation(x_coord, sample_matrix[2], mapped_x+2)
 
-                r4 = __cubic_interpolation(x_coord, sample_matrix[3], mapped_x+2)
+                    r4 = __cubic_interpolation(x_coord, sample_matrix[3], mapped_x+2)
 
-                output[row, column] = __cubic_interpolation(y_coord, [r1,r2,r3,r4], mapped_y+2)
+                    output[row, column] = __cubic_interpolation(y_coord, [r1,r2,r3,r4], mapped_y+2)
 
     return output
 
@@ -429,43 +436,6 @@ def shearTransform(src, dst):
 
     M = np.linalg.solve(m, n)
     return M.reshape(2, 3)
-
-def getPerspectiveTransform(src: np.array, dst: np.array, solveMethod=None) -> np.array:
-    """
-        The calculates the 3x3 transformation matrix to be passed into "warpPerspective".
-
-        Args:
-            src (:class: np.array):  A set of 4 source coordinates to start the warp from.
-
-            dst (:class: np.array): A set of 4 destination coordinates to scale everything to.
-
-        Returns:
-            (:class: np.array):  A 3x3 transformation matrix.
-    """
-    # Sanity check the input.
-    if src.shape != (4, 2) or dst.shape != (4, 2):
-        raise ValueError("There must be four source points and four destination points.")
-
-    m = np.zeros((8, 8))
-    n = np.zeros((8))
-    for index in range(4):
-        m[index][0] = m[index + 4][3] = src[index][0]
-        m[index][1] = m[index + 4][4] = src[index][1]
-        m[index][2] = m[index + 4][5] = 1
-        m[index][3] = m[index][4] = m[index][5] = 0
-        m[index + 4][0] = m[index + 4][1] = m[1 + 4][2] = 0
-        m[index][6] = -src[index][0] * dst[index][0]
-        m[index][7] = -src[index][1] * dst[index][0]
-        m[index + 4][6] = -src[i][0] * dst[index][1]
-        m[index + 4][7] = -src[index][1] * dst[index][1]
-        n[index] = dst[index][0]
-        n[index + 4] = dst[index][1]
-
-    transform_matrix = np.linalg.solve(m, n)
-    transform_matrix.resize((9,), refcheck = False)
-    transform_matrix[8] = 1
-    # Reshape it to be the needed 3,3 matrix.
-    return transform_matrix.reshape((3, 3))
 
 def fisheye(image: np.array) -> np.array:
     """
@@ -524,12 +494,100 @@ def fisheye(image: np.array) -> np.array:
     #return final image
     return final
 
-def warpPerspective(src, M, dsize, dst, flags, borderMode, borderValue):
+def getPerspectiveTransform(src: np.array, dst: np.array, solveMethod=None) -> np.array:
+    """
+        The calculates the 3x3 transformation matrix to be passed into "warpPerspective".
+
+        Args:
+            src (:class: np.array):  A set of 4 source coordinates to start the warp from.
+
+            dst (:class: np.array): A set of 4 destination coordinates to scale everything to.
+
+        Returns:
+            (:class: np.array):  A 3x3 transformation matrix.
+    """
+    # Sanity check the input.
+    if src.shape != (4, 2) or dst.shape != (4, 2):
+        raise ValueError("There must be four source points and four destination points.")
+
+    m = np.zeros((8, 8))
+    n = np.zeros((8))
+    for index in range(4):
+        m[index][0] = m[index + 4][3] = src[index][0]
+        m[index][1] = m[index + 4][4] = src[index][1]
+        m[index][2] = m[index + 4][5] = 1
+        m[index][3] = m[index][4] = m[index][5] = 0
+        m[index + 4][0] = m[index + 4][1] = m[1 + 4][2] = 0
+        m[index][6] = -src[index][0] * dst[index][0]
+        m[index][7] = -src[index][1] * dst[index][0]
+        m[index + 4][6] = -src[index][0] * dst[index][1]
+        m[index + 4][7] = -src[index][1] * dst[index][1]
+        n[index] = dst[index][0]
+        n[index + 4] = dst[index][1]
+
+    transform_matrix = np.linalg.solve(m, n)
+    transform_matrix.resize((9,), refcheck = False)
+    transform_matrix[8] = 1
+    # Reshape it to be the needed 3,3 matrix.
+    return transform_matrix.reshape((3, 3))
+
+def warpPerspective(image, transform_matrix, dsize,
+                    flags=(INTER_LINEAR, 0), borderMode=BORDER_CONSTANT, borderValue=0):
     """
         Creates a scaled and/or rotated version of an image using a set of 4 coordinate source points and
-        4 coordinate destination points.  Straight lines remain straight during this process.
+        4 coordinate destination points.  Straight lines remain straight during this process.  This takes
+        in an already generated transformation matrix to offset each point by.
+
+        Args:
+            image (:class: np.array):  The source image to transform
+
+            transform_matrix (:class: np.array):  A 3X3 transformation array obtained via
+                "getPerspectiveTransform".
+
+            dsize (:class: tuple):  The size of the new image.
+        KArgs:
+            flags (:class: tuple):  A tuple containing the desired interpolation method, and whether or not
+                to do an inverse transform.  Defaults to using binlinear and non-inverse.
+
+            borderMode (:class: int):  The desired mode for dealing with the borders if an image is out of
+                bounds.  Defaults to using a single constant value.
+
+            borderValue (:class: int):  If BORDER_CONSTANT is used, this is the value to be used around the
+                border of the image.  Defaults to 0 (black).
     """
-    raise NotImplementedError()
+    if transform_matrix.shape != (3, 3):
+        raise ValueError("Transform Matrix must be 3X3")
+    rows, columns = image.shape
+    new_rows, new_columns = dsize
+    # Initialize the image with the desired border value.  If we get a mapped value outside the image,
+    # we would use this instead.  If BORDER_REPLICATE is desired, handle that below.
+    output = np.full((new_rows, new_columns), borderValue, dtype = np.uint8)
+
+    transform_matrix = np.linalg.inv(transform_matrix)
+
+    for row in range(0, new_rows):
+        for column in range(0, new_columns):
+            # M in this case is our transform_matrix.
+            # x and y is the coordinates of the new image.
+            # The value of the new image at 0, 0 would be the mapped coordinates this formula determines,
+            # and the pixel value would be obtained from the old image.
+            # [new x] = [(M11 * x + M12 * y + M13)/(M31 * x + M32 * y + M33)]
+            # [new y]   [(M21 * x + M22 * y + M23)/(M31 * x + M32 * y + M33)]
+            mapped_x = (transform_matrix[0, 0] * column + transform_matrix[0, 1] * row + transform_matrix[0, 2]) / \
+                       (transform_matrix[2, 0] * column + transform_matrix[2, 1] * row + transform_matrix[2, 2])
+            mapped_y = (transform_matrix[1, 0] * column + transform_matrix[1, 1] * row + transform_matrix[1, 2]) / \
+                       (transform_matrix[2, 0] * column + transform_matrix[2, 1] * row + transform_matrix[2, 2])
+
+            # Ensure we don't go out of bounds of the image.
+            # If we go outside the bounds, the result will just be 0, as the image
+            # was initialized with a border value.
+            if mapped_x > 0 and mapped_y > 0 and mapped_x < columns and mapped_y < rows:
+                # If we get a mapped value that is not an exact coordinate, we need to interpolate.
+                if flags[0] == INTER_LINEAR:
+                    # This one's easy, just find the closest points.
+                    output[row, column] = image[int(round(mapped_y)), int(round(mapped_x))]
+
+    return output
 
 def get_exports() -> dict:
     """
