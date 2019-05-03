@@ -442,10 +442,13 @@ def warpAffine(image: np.array, transform: np.array, size: Tuple[int, int], inte
             # [x'] = [a b][x]+[t1] Where [a b t1] is the transform matrix.
             # [y']   [c d][y] [t2]       [c d t2]
 
-            mapped_x = row * transform[0, 0] + column * transform[0,1] + transform[0,2]
-            mapped_y = row * transform[1, 0] + column * transform[1,1] + transform[1,2]
+            mapped_x = transform[0, 0] * column + transform[0,1] * row + transform[0,2]
+            mapped_y = transform[1, 0] * column + transform[1,1] * row + transform[1,2]
             int_x = int(mapped_x)
             int_y = int(mapped_y)
+
+            if row == 511 and column == 511:
+                import pdb;pdb.set_trace()
 
             # Ensure we don't go out of bounds of the image.
             # If we go outside the bounds, the result will just be 0, as the image
@@ -454,7 +457,7 @@ def warpAffine(image: np.array, transform: np.array, size: Tuple[int, int], inte
 
                 # If our mapped values correspond to actual pixels, use those.
                 if mapped_x.is_integer() and mapped_y.is_integer():
-                    output[row, column] = image[int_x, int_y]
+                    output[row, column] = image[int_y, int_x]
 
                 # If we get a mapped value that is not an exact coordinate, we need to interpolate.
                 elif interpolation == INTER_NEAREST:
