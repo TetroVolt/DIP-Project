@@ -117,6 +117,9 @@ class LibraryTest(test.TestCase):
         transform = lib.getPerspectiveTransform(srcPoints, dstPoints)
         lib.warpPerspective(self.input_matrix, transform, (500, 500))
 
+    def test_fisheye(self):
+        lib.fisheye(self.input_matrix)
+
     def test_exports(self):
         exports = lib.get_exports()
         blacklist = ["np", "math", "Tuple", "get_exports", "test_library", "INTER_NEAREST", "INTER_LINEAR", "INTER_CUBIC",
