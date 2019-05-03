@@ -447,9 +447,6 @@ def warpAffine(image: np.array, transform: np.array, size: Tuple[int, int], inte
             int_x = int(mapped_x)
             int_y = int(mapped_y)
 
-            if row == 511 and column == 511:
-                import pdb;pdb.set_trace()
-
             # Ensure we don't go out of bounds of the image.
             # If we go outside the bounds, the result will just be 0, as the image
             # was initialized with all zeroes.
