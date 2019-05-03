@@ -7,6 +7,7 @@ from typing import Tuple
 INTER_NEAREST = 0
 INTER_LINEAR = 1
 INTER_CUBIC = 2
+INTER_LANCZOS4 = 2
 
 # Enums for use in the warpPerspective function to choose
 # how the border is dealt with.
@@ -51,6 +52,10 @@ def resize(image: np.array, output_size: Tuple[int, int],
 
     elif interpolation == INTER_CUBIC:
         return __bicubic_interpolation(image, (scale_y, scale_x), (new_rows, new_columns))
+
+    elif interpolation == INTER_LANCZOS4:
+        return __lanczos4_interpolation(image, (scale_y, scale_x), (new_rows, new_columns))
+
 
 def __nearest_neighbor(image: np.array, scale: Tuple[float, float], size: Tuple[int, int]) -> np.array:
     """
