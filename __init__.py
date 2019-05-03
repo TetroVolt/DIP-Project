@@ -3,16 +3,9 @@ import math
 
 from typing import Tuple
 
-# Enums for picking the interpolation method.
 INTER_NEAREST = 0
 INTER_LINEAR = 1
 INTER_CUBIC = 2
-INTER_LANCZOS4 = 2
-
-# Enums for use in the warpPerspective function to choose
-# how the border is dealt with.
-BORDER_CONSTANT = 0
-BORDER_REPLICATE = 1
 
 def resize(image: np.array, output_size: Tuple[int, int],
            dst=None, fx=None, fy=None, interpolation: int=INTER_LINEAR) -> np.array:
@@ -31,12 +24,8 @@ def resize(image: np.array, output_size: Tuple[int, int],
             scale_y (:class: double):  Amount of scale along the y direction (eg. 0.5, 1.5, 2.5).
                                   Defaults to None.
 
-            interpolation (:class: int):  Method used for interpolation as an integer.
-                                  INTER_NEAREST = Nearest Neighbors
-                                  INTER_LINEAR = Bilinear
-                                  INTER_CUBIC = Bicubic
-                                  INTER_LANCZOS4 = Lanczos4
-                                  Defaults to bilinear.
+            interpolation (:class: int):  Method used for interpolation as an integer (either bilinear or
+                                          nearest_neighbor).  Defaults to bilinear.
 
         Returns:
             (:class: array):  A resized image based on the interpolation method specified.
@@ -53,10 +42,6 @@ def resize(image: np.array, output_size: Tuple[int, int],
 
     elif interpolation == INTER_CUBIC:
         return __bicubic_interpolation(image, (scale_y, scale_x), (new_rows, new_columns))
-
-    elif interpolation == INTER_LANCZOS4:
-        return __lanczos4_interpolation(image, (scale_y, scale_x), (new_rows, new_columns))
-
 
 def __nearest_neighbor(image: np.array, scale: Tuple[float, float], size: Tuple[int, int]) -> np.array:
     """
@@ -226,30 +211,31 @@ def __bilinear_interpolation(image: np.array, scale: Tuple[float, float], size: 
 
 def __product_sum(x_arr, x, l):
     coeff = 1
-    for index in range(0,4):
-        if index != l:
-            coeff = coeff * ((x - x_arr[index]) / (x_arr[l] - x_arr[index]))
+    for i in range(0,4):
+        if i != l:
+            coeff = coeff * ((x - x_arr[i]) / (x_arr[l] - x_arr[i]))
     return coeff
 
 def __cubic_interpolation(x_vals, intensity_vals, x):
     value = 0
-    for index in range(0, 4):
-        value = value + (__product_sum(x_vals, x, index) * intensity_vals[index])
+    for i in range(0,4):
+        value = value + (__product_sum(x_vals, x, i) * intensity_vals[i])
     return value
 
 def __bicubic_interpolation(image: np.array, scale: Tuple[float, float], size: Tuple[int, int]) -> np.array:
     """
         Performs a bicubic interpolation rescaling of the desired image.
-
+        
         Args:
             image (:class: array):  The image to be resampled, as a matrix of unsigned intergers.
-
+        
             scale (:class: tuple):  Amount of scale (y, x) along each direction (eg. 0.5, 1.5, 2.5).
-
+        
             size (:class: tuple):  Size of the new image (rows, columns).
-
-        Returns:
-            (:class: array):  A resized image based on bicubic interpolation.
+        
+        Returns:        
+            (:class: array):  A resized image based on bilinear interpolation.
+    
     """
 
     rows, columns = image.shape
@@ -294,7 +280,7 @@ def __bicubic_interpolation(image: np.array, scale: Tuple[float, float], size: T
                 new_pixel = image[top_y, left_x]
                 row_counter = math.ceil(scale_x)
                 column_counter = math.ceil(scale_y)
-
+            
             # Interpolate unkown
             else:
                 # Matrix of 16 samples for cubic interpolation
@@ -311,105 +297,17 @@ def __bicubic_interpolation(image: np.array, scale: Tuple[float, float], size: T
                 r4 = __cubic_interpolation(x_coord, sample_matrix[3], mapped_x+2)
 
                 new_pixel = __cubic_interpolation(y_coord, [r1,r2,r3,r4], mapped_y+2)
-
-            new_pixel = 0 if new_pixel < 0 else 255 if new_pixel > 255 else new_pixel
-
-            new_image[row_iter, column_iter] = new_pixel
-
-    return new_image
-
-def __lanc_func(x):
-    result = 0
-    if x <= 4 :
-        result = (np.sinc(x)*np.sinc(x/4))
-    return result
-
-def __lanczos_weight(x, y):
-    weight = 0
-    for i in range(-3,5):
-        for j in range(-3,5):
-            weight = weight + __lanc_func(i-x+int(x))*__lanc_func(j-y+int(y))
-    return weight
-
-def __lanczos_filter(x, y, image):
-    intensity = 0
-    for i in range(-3,5):
-        for j in range(-3,5):
-            intensity = intensity + image[int(x)+i, int(y)+j]*__lanc_func(i-x+int(x))*__lanc_func(j-y+int(y))
-    normalized = intensity/__lanczos_weight(x, y)
-    return normalized
-
-def __lanczos4_interpolation(image: np.array, scale: Tuple[float, float], size: Tuple[int, int]) -> np.array:
-
-    rows, columns = image.shape
-
-    scale_y, scale_x = scale
-    new_rows, new_columns = size
-
-    # Create the new image intialized with all zeroes.
-    new_image = np.zeros(shape=(new_rows, new_columns), dtype=np.uint8)
-
-    # Initialize the padded version of the original image
-    padded_image = image
-
-    # Pad left and right sides of the image
-    left_pad = np.append(np.append(padded_image[:,0:1],padded_image[:,0:1],axis=1),np.append(padded_image[:,0:1],padded_image[:,0:1],axis=1),axis=1)
-    right_pad = np.append(np.append(padded_image[:,columns-1:columns],padded_image[:,columns-1:columns],axis=1),np.append(padded_image[:,columns-1:columns],padded_image[:,columns-1:columns],axis=1),axis=1)
-    padded_image = np.append(np.append(left_pad,padded_image, axis=1),right_pad, axis=1)
-    # Pad top and bottom of image
-    top_pad = np.array([padded_image[0], padded_image[0], padded_image[0], padded_image[0]])
-    bot_pad = np.array([padded_image[rows-1], padded_image[rows-1], padded_image[rows-1], padded_image[rows-1]])
-    padded_image = np.append(np.append(top_pad,padded_image, axis=0),bot_pad, axis=0)
-
-    for row_iter in range(0, new_rows):
-        for column_iter in range(0, new_columns):
-
-            # This is where the new_image pixel is on the old image.
-            # This will likely be a float, in which case we will need to
-            # calculate the value.  If it is not, it maps exactly onto an
-            # already existing pixel, so use that.
-            mapped_x = (column_iter) / scale_x
-            mapped_y = (row_iter) / scale_y
-
-            # Get the coordinates for the home pixel,
-            # and the rest can be deduced.
-            left_x = math.floor(mapped_x)
-            top_y = math.floor(mapped_y)
-            # Home pixel coordinates relative to padded image
-            home_x_p = left_x + 4
-            home_y_p = top_y + 4
-
-            new_pixel = __lanczos_filter(mapped_y + 4, mapped_x + 4, padded_image)
+                
             if new_pixel < 0 :
                 new_pixel = 0
             elif new_pixel > 255 :
                 new_pixel = 255
-
-            new_image[row_iter,column_iter] = new_pixel
+            new_image[row_iter, column_iter] = new_pixel
+                
 
     return new_image
 
-def __warp_cubic(x_array, y_coord, image, x):
-
-    adjusted_y = y_coord
-
-    if adjusted_y < 0:
-        adjusted_y = 0
-    elif adjusted_y >= image.shape[0]:
-        adjusted_y = image.shape[0] - 1
-
-    intensity_array = np.zeros(shape=4)
-    for i in range(0,4):
-        temp_x = x_array[i]
-        if x_array[i] < 0:
-            temp_x = 0
-        elif x_array[i] >= image.shape[1]:
-            temp_x = image.shape[1] - 1
-        intensity_array[i] = image[adjusted_y,temp_x]
-
-    return __cubic_interpolation(x_array, intensity_array, x)
-
-def warpAffine(image: np.array, transform: np.array, size: Tuple[int, int], interpolation: int) -> np.array:
+def warpAffine(image: np.array, transform: np.array, size: Tuple[int, int]) -> np.array:
     """
         Apply the affine transformation to an image given a 2x3 transformation matrix.
         The basic idea is to apply a transform matrix to each pixel, which will offset them
@@ -424,8 +322,6 @@ def warpAffine(image: np.array, transform: np.array, size: Tuple[int, int], inte
 
             size (:class: tuple):  The size of the new image (rows, columns).
 
-            interpolation (:class: int):  The interpolation method to use for mapping pixels.
-
         Returns:
             (:class: array):  The transformed image of the specified image.
     """
@@ -436,60 +332,13 @@ def warpAffine(image: np.array, transform: np.array, size: Tuple[int, int], inte
 
     for row in range(0, rows):
         for column in range(0, columns):
-            # Formula used:
             # [x'] = [a b][x]+[t1] Where [a b t1] is the transform matrix.
             # [y']   [c d][y] [t2]       [c d t2]
-
-            mapped_x = row * transform[0, 0] + column * transform[0,1] + transform[0,2]
-            mapped_y = row * transform[1, 0] + column * transform[1,1] + transform[1,2]
-            int_x = int(mapped_x)
-            int_y = int(mapped_y)
-
+            new_x = int(row * transform[0, 0] + column * transform[0,1] + transform[0,2])
+            new_y = int(row * transform[1, 0] + column * transform[1,1] + transform[1,2])
             # Ensure we don't go out of bounds of the image.
-            # If we go outside the bounds, the result will just be 0, as the image
-            # was initialized with all zeroes.
-            if 0 < mapped_x < columns and 0 < mapped_y < rows:
-
-                # If our mapped values correspond to actual pixels, use those.
-                if mapped_x.is_integer() and mapped_y.is_integer():
-                    output[row, column] = image[int_x, int_y]
-
-                # If we get a mapped value that is not an exact coordinate, we need to interpolate.
-                elif interpolation == INTER_NEAREST:
-                    # This one's easy, just find the closest points.
-                    output[row, column] = image[int(round(mapped_y)), int(round(mapped_x))]
-
-                elif interpolation == INTER_LINEAR:
-                    left_x, right_x = int_x, int_x+1
-                    top_y, bottom_y = int_y, int_y+1
-
-                    # Get our two imaginary points for X value.
-                    r1 = __interpolate(right_x, mapped_x, left_x,
-                                       image[top_y-1, left_x-1], image[top_y-1, left_x])
-                    r2 = __interpolate(right_x, mapped_x, left_x,
-                                       image[top_y, left_x-1], image[top_y, left_x])
-
-                    # Interpolate the Y value and assign it to the image.
-                    output[row, column] = __interpolate(bottom_y, mapped_y, top_y, r1, r2)
-
-                elif interpolation == INTER_CUBIC:
-                    # Matrix of 16 samples for cubic interpolation.
-                    x_coord = [int_x-1,int_x,int_x+1,int_x+2]
-                    y_coord = [int_y-1,int_y,int_y+1,int_y+2]
-
-                    r1 = __warp_cubic(x_coord, y_coord[0], image, mapped_x)
-
-                    r2 = __warp_cubic(x_coord, y_coord[1], image, mapped_x)
-
-                    r3 = __warp_cubic(x_coord, y_coord[2], image, mapped_x)
-
-                    r4 = __warp_cubic(x_coord, y_coord[3], image, mapped_x)
-
-                    new_pixel = __cubic_interpolation(y_coord, [r1,r2,r3,r4], mapped_y)
-
-                    new_pixel = 0 if new_pixel < 0 else 255 if new_pixel > 255 else new_pixel
-
-                    output[row, column] = new_pixel
+            if 0 < new_x < columns and 0 < new_y < rows:
+                output[row, column] = image[new_y, new_x]
 
     return output
 
@@ -537,6 +386,42 @@ def shearTransform(src, dst):
 
     M = np.linalg.solve(m, n)
     return M.reshape(2, 3)
+
+def getPerspectiveTransform(src: np.array, dst: np.array, solveMethod=None) -> np.array:
+    """
+        The calculates the 3x3 transformation matrix to be passed into "warpPerspective".
+
+        Args:
+            src (:class: np.array):  A set of 4 source coordinates to start the warp from.
+
+            dst (:class: np.array): A set of 4 destination coordinates to scale everything to.
+
+        Returns:
+            (:class: np.array):  A 3x3 transformation matrix.
+    """
+    # Sanity check the input.
+    if src.shape != (4, 2) or dst.shape != (4, 2):
+        raise ValueError("There must be four source points and four destination points.")
+
+    m = np.zeros((8, 8))
+    n = np.zeros((8))
+    for i in range(4):
+        m[i][0] = m[i + 4][3] = src[i][0]
+        m[i][1] = m[i + 4][4] = src[i][1]
+        m[i][2] = m[i + 4][5] = 1
+        m[i][3] = m[i][4] = a[i][5] = 0
+        m[i + 4][0] = m[i + 4][1] = m[1 + 4][2] = 0
+        m[i][6] = -src[i][0] * dst[i][0]
+        m[i][7] = -src[i][1] * dst[i][0]
+        m[i + 4][6] = -src[i][0] * dst[i][1]
+        m[i + 4][7] = -src[i][1] * dst[i][1]
+        n[i] = dst[i][0]
+        n[i + 4] = dst[i][1]
+
+    M = np.linalg.solve(m, n)
+    M.resize((9,), refcheck = False)
+    M[8] = 1
+    return M.reshape((3, 3))
 
 def fisheye(image: np.array) -> np.array:
     """
@@ -595,137 +480,12 @@ def fisheye(image: np.array) -> np.array:
     #return final image
     return final
 
-def getPerspectiveTransform(src: np.array, dst: np.array, solveMethod=None) -> np.array:
-    """
-        The calculates the 3x3 transformation matrix to be passed into "warpPerspective".
-
-        Args:
-            src (:class: np.array):  A set of 4 source coordinates to start the warp from.
-
-            dst (:class: np.array): A set of 4 destination coordinates to scale everything to.
-
-        Returns:
-            (:class: np.array):  A 3x3 transformation matrix.
-    """
-    # Sanity check the input.
-    if src.shape != (4, 2) or dst.shape != (4, 2):
-        raise ValueError("There must be four source points and four destination points.")
-
-    m = np.zeros((8, 8))
-    n = np.zeros((8))
-    for index in range(4):
-        m[index][0] = m[index + 4][3] = src[index][0]
-        m[index][1] = m[index + 4][4] = src[index][1]
-        m[index][2] = m[index + 4][5] = 1
-        m[index][3] = m[index][4] = m[index][5] = 0
-        m[index + 4][0] = m[index + 4][1] = m[1 + 4][2] = 0
-        m[index][6] = -src[index][0] * dst[index][0]
-        m[index][7] = -src[index][1] * dst[index][0]
-        m[index + 4][6] = -src[index][0] * dst[index][1]
-        m[index + 4][7] = -src[index][1] * dst[index][1]
-        n[index] = dst[index][0]
-        n[index + 4] = dst[index][1]
-
-    transform_matrix = np.linalg.solve(m, n)
-    transform_matrix.resize((9,), refcheck = False)
-    transform_matrix[8] = 1
-    # Reshape it to be the needed 3,3 matrix.
-    return transform_matrix.reshape((3, 3))
-
-def warpPerspective(image, transform, dsize,
-                    flags=(INTER_LINEAR, 0), borderMode=BORDER_CONSTANT, borderValue=0):
+def warpPerspective(src, M, dsize, dst, flags, borderMode, borderValue):
     """
         Creates a scaled and/or rotated version of an image using a set of 4 coordinate source points and
-        4 coordinate destination points.  Straight lines remain straight during this process.  This takes
-        in an already generated transformation matrix to offset each point by.
-
-        Args:
-            image (:class: np.array):  The source image to transform
-
-            transform (:class: np.array):  A 3X3 transformation array obtained via "getPerspectiveTransform".
-
-            dsize (:class: tuple):  The size of the new image.
-        KArgs:
-            flags (:class: tuple):  A tuple containing the desired interpolation method, and whether or not
-                to do an inverse transform.  Defaults to using binlinear and non-inverse.
-
-            borderMode (:class: int):  The desired mode for dealing with the borders if an image is out of
-                bounds.  Defaults to using a single constant value.
-
-            borderValue (:class: int):  If BORDER_CONSTANT is used, this is the value to be used around the
-                border of the image.  Defaults to 0 (black).
+        4 coordinate destination points.  Straight lines remain straight during this process.
     """
-    if transform.shape != (3, 3):
-        raise ValueError("Transform Matrix must be 3X3")
-    rows, columns = image.shape
-    new_rows, new_columns = dsize
-    # Initialize the image with the desired border value.  If we get a mapped value outside the image,
-    # we would use this instead.  If BORDER_REPLICATE is desired, handle that below.
-    output = np.full((new_rows, new_columns), borderValue, dtype = np.uint8)
-
-    transform = np.linalg.inv(transform)
-
-    for row in range(0, new_rows):
-        for column in range(0, new_columns):
-            # M in this case is our transform_matrix.
-            # x and y is the coordinates of the new image.
-            # The value of the new image at 0, 0 would be the mapped coordinates this formula determines,
-            # and the pixel value would be obtained from the old image.
-            # [new x] = [(M11 * x + M12 * y + M13)/(M31 * x + M32 * y + M33)]
-            # [new y]   [(M21 * x + M22 * y + M23)/(M31 * x + M32 * y + M33)]
-            mapped_x = (transform[0, 0] * column + transform[0, 1] * row + transform[0, 2]) / \
-                       (transform[2, 0] * column + transform[2, 1] * row + transform[2, 2])
-            mapped_y = (transform[1, 0] * column + transform[1, 1] * row + transform[1, 2]) / \
-                       (transform[2, 0] * column + transform[2, 1] * row + transform[2, 2])
-            int_x = int(mapped_x)
-            int_y = int(mapped_y)
-
-            # Ensure we don't go out of bounds of the image.
-            # If we go outside the bounds, the result will just be 0, as the image
-            # was initialized with a border value.
-            if mapped_x > 0 and mapped_y > 0 and mapped_x < columns and mapped_y < rows:
-                # If our mapped values correspond to actual pixels, use those.
-                if mapped_x.is_integer() and mapped_y.is_integer():
-                    output[row, column] = image[int_x, int_y]
-
-                # If we get a mapped value that is not an exact coordinate, we need to interpolate.
-                elif flags[0] == INTER_LINEAR:
-                    # This one's easy, just find the closest points.
-                    output[row, column] = image[int(round(mapped_y)), int(round(mapped_x))]
-
-                elif interpolation == INTER_LINEAR:
-                    left_x, right_x = int_x, int_x+1
-                    top_y, bottom_y = int_y, int_y+1
-
-                    # Get our two imaginary points for X value.
-                    r1 = __interpolate(right_x, mapped_x, left_x,
-                                       image[top_y-1, left_x-1], image[top_y-1, left_x])
-                    r2 = __interpolate(right_x, mapped_x, left_x,
-                                       image[top_y, left_x-1], image[top_y, left_x])
-
-                    # Interpolate the Y value and assign it to the image.
-                    output[row, column] = __interpolate(bottom_y, mapped_y, top_y, r1, r2)
-
-                elif interpolation == INTER_CUBIC:
-                    # Matrix of 16 samples for cubic interpolation.
-                    x_coord = [int_x-1,int_x,int_x+1,int_x+2]
-                    y_coord = [int_y-1,int_y,int_y+1,int_y+2]
-
-                    r1 = __warp_cubic(x_coord, y_coord[0], image, mapped_x)
-
-                    r2 = __warp_cubic(x_coord, y_coord[1], image, mapped_x)
-
-                    r3 = __warp_cubic(x_coord, y_coord[2], image, mapped_x)
-
-                    r4 = __warp_cubic(x_coord, y_coord[3], image, mapped_x)
-
-                    new_pixel = __cubic_interpolation(y_coord, [r1,r2,r3,r4], mapped_y)
-
-                    new_pixel = 0 if new_pixel < 0 else 255 if new_pixel > 255 else new_pixel
-
-                    output[row, column] = new_pixel
-
-    return output
+    raise NotImplementedError()
 
 def get_exports() -> dict:
     """
