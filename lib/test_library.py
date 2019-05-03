@@ -50,6 +50,9 @@ class LibraryTest(test.TestCase):
         result = lib.resize(self.input_matrix, (2, 2))
         truth, msg = self.assert_array(expected_downsize, result)
         self.assertTrue(truth, "Downsizing was incorrect. {}".format(msg))
+        result = lib.resize(self.input_matrix, (2, 2), interpolation=lib.INTER_NEAREST)
+        result = lib.resize(self.input_matrix, (2, 2), interpolation=lib.INTER_CUBIC)
+        result = lib.resize(self.input_matrix, (2, 2), interpolation=lib.INTER_LANCZOS4)
 
     def test_warpAffine(self):
         #TODO-Add assertions on expected output.
@@ -122,7 +125,7 @@ class LibraryTest(test.TestCase):
 
     def test_exports(self):
         exports = lib.get_exports()
-        blacklist = ["np", "math", "Tuple", "get_exports", "test_library", "INTER_NEAREST", "INTER_LINEAR", "INTER_CUBIC",
+        blacklist = ["cv2", "np", "math", "Tuple", "get_exports", "test_library", "INTER_LANCZOS4", "INTER_NEAREST", "INTER_LINEAR", "INTER_CUBIC",
                      "BORDER_CONSTANT", "BORDER_REPLICATE"]
         # Get all the functions and attributes of the module, and filter by only the public functions.
         function_names = [attr for attr in dir(lib) if "__" not in attr and attr not in blacklist]

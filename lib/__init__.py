@@ -1,4 +1,6 @@
 import numpy as np
+# Used to write an image.
+import cv2
 import math
 
 from typing import Tuple
@@ -7,22 +9,22 @@ from typing import Tuple
 INTER_NEAREST = 0
 INTER_LINEAR = 1
 INTER_CUBIC = 2
-INTER_LANCZOS4 = 2
+INTER_LANCZOS4 = 3
 
 # Enums for use in the warpPerspective function to choose
 # how the border is dealt with.
 BORDER_CONSTANT = 0
 BORDER_REPLICATE = 1
 
-def resize(image: np.array, output_size: Tuple[int, int],
+def resize(src: np.array, dsize: Tuple[int, int],
            dst=None, fx=None, fy=None, interpolation: int=INTER_LINEAR) -> np.array:
     """
         Wrapper for the appropriate funciton to resample an image based on the interpolation method.
 
         Args:
-            image (:class: array):  The image to be resampled, as a matrix of unsigned intergers.
+            src (:class: array):  The image to be resampled, as a matrix of unsigned intergers.
 
-            output_size (:class: tuple):  A tuple containing the desired size of the new image.
+            dsize (:class: tuple):  A tuple containing the desired size of the new image.
 
         Kargs:
             scale_x (:class: double):  Amount of scale along the x direction (eg. 0.5, 1.5, 2.5).
@@ -41,21 +43,21 @@ def resize(image: np.array, output_size: Tuple[int, int],
         Returns:
             (:class: array):  A resized image based on the interpolation method specified.
     """
-    new_rows, new_columns = output_size
-    rows, columns = image.shape
+    new_rows, new_columns = dsize
+    rows, columns = src.shape
     scale_y = float(new_rows) / rows
     scale_x = float(new_columns) / columns
     if interpolation ==  INTER_LINEAR:
-        return __bilinear_interpolation(image, (scale_y, scale_x), (new_rows, new_columns))
+        return __bilinear_interpolation(src, (scale_y, scale_x), (new_rows, new_columns))
 
-    elif interpolation == INTER_NEIGHBOR:
-        return __nearest_neighbor(image, (scale_y, scale_x), (new_rows, new_columns))
+    elif interpolation == INTER_NEAREST:
+        return __nearest_neighbor(src, (scale_y, scale_x), (new_rows, new_columns))
 
     elif interpolation == INTER_CUBIC:
-        return __bicubic_interpolation(image, (scale_y, scale_x), (new_rows, new_columns))
+        return __bicubic_interpolation(src, (scale_y, scale_x), (new_rows, new_columns))
 
     elif interpolation == INTER_LANCZOS4:
-        return __lanczos4_interpolation(image, (scale_y, scale_x), (new_rows, new_columns))
+        return __lanczos4_interpolation(src, (scale_y, scale_x), (new_rows, new_columns))
 
 
 def __nearest_neighbor(image: np.array, scale: Tuple[float, float], size: Tuple[int, int]) -> np.array:
@@ -86,8 +88,8 @@ def __nearest_neighbor(image: np.array, scale: Tuple[float, float], size: Tuple[
         for column_iter in range(0, new_columns):
             # Calculate where the closest point is on the old image based on the scale factor.
             # Then round that as appropriate.
-            nearest_x = integer_round(column_iter / scale_x)
-            nearest_y = integer_round(row_iter / scale_y)
+            nearest_x = round(column_iter / scale_x)
+            nearest_y = round(row_iter / scale_y)
 
             # Santize the x value to be within bounds.
             # If the actual value is 255.5 then it will round out of bounds.
@@ -272,6 +274,7 @@ def __bicubic_interpolation(image: np.array, scale: Tuple[float, float], size: T
     cv2.imwrite('padded.jpg', padded_image)
 
     for row_iter in range(0, new_rows):
+        print("Row:  " + str(row_iter))
         for column_iter in range(0, new_columns):
 
             # This is where the new_image pixel is on the old image.

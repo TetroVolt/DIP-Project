@@ -41,5 +41,5 @@ class Library:
             return self.libsource.__getattribute__(attr)
 
 Library = SingletonDecorator(Library)
-lib = Library('opencv')
-#lib = Library('library')
+#lib = Library('opencv')
+lib = Library('library')
