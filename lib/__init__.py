@@ -320,25 +320,20 @@ def __bicubic_interpolation(image: np.array, scale: Tuple[float, float], size: T
 
     return new_image
 
-def __lanc_func(x):
-    result = 0
-    if x <= 4 :
-        result = (np.sinc(x)*np.sinc(x/4))
-    return result
+def __lanc_func(x, lookup_table):
+    if x not in lookup_table:
+        lookup_table[x] = (np.sinc(x)*np.sinc(x/4))
+    return lookup_table[x]
 
-def __lanczos_weight(x, y):
+def __lanczos_filter(x, y, image, lookup_table):
     weight = 0
-    for i in range(-3,5):
-        for j in range(-3,5):
-            weight = weight + __lanc_func(i-x+int(x))*__lanc_func(j-y+int(y))
-    return weight
-
-def __lanczos_filter(x, y, image):
     intensity = 0
     for i in range(-3,5):
         for j in range(-3,5):
-            intensity = intensity + image[int(x)+i, int(y)+j]*__lanc_func(i-x+int(x))*__lanc_func(j-y+int(y))
-    normalized = intensity/__lanczos_weight(x, y)
+            lanc_coeff = __lanc_func(i-x+int(x), lookup_table)*__lanc_func(j-y+int(y), lookup_table)
+            intensity = intensity + image[int(x)+i, int(y)+j]*lanc_coeff
+            weight = weight + lanc_coeff
+    normalized = intensity/weight
     return normalized
 
 def __lanczos4_interpolation(image: np.array, scale: Tuple[float, float], size: Tuple[int, int]) -> np.array:
@@ -353,6 +348,9 @@ def __lanczos4_interpolation(image: np.array, scale: Tuple[float, float], size: 
 
     # Initialize the padded version of the original image
     padded_image = image
+
+    # Create a lookup table to eliminate redundant calculations of __lanc_func
+    lookup_table = dict()
 
     # Pad left and right sides of the image
     left_pad = np.append(np.append(padded_image[:,0:1],padded_image[:,0:1],axis=1),np.append(padded_image[:,0:1],padded_image[:,0:1],axis=1),axis=1)
@@ -377,16 +375,19 @@ def __lanczos4_interpolation(image: np.array, scale: Tuple[float, float], size: 
             # and the rest can be deduced.
             left_x = math.floor(mapped_x)
             top_y = math.floor(mapped_y)
-            # Home pixel coordinates relative to padded image
-            home_x_p = left_x + 4
-            home_y_p = top_y + 4
+            
+            if mapped_x == left_x and mapped_y == top_y:
+                new_pixel = image[top_y,left_x]
 
-            new_pixel = __lanczos_filter(mapped_y + 4, mapped_x + 4, padded_image)
-            if new_pixel < 0 :
-                new_pixel = 0
-            elif new_pixel > 255 :
-                new_pixel = 255
+            else:
 
+                new_pixel = __lanczos_filter(mapped_y + 4, mapped_x + 4, padded_image, lookup_table)
+
+                if new_pixel < 0 :
+                    new_pixel = 0
+                elif new_pixel > 255 :
+                    new_pixel = 255
+            
             new_image[row_iter,column_iter] = new_pixel
 
     return new_image
