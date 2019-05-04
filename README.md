@@ -9,15 +9,16 @@ gui status : [![CircleCI](https://circleci.com/gh/TetroVolt/DIP-Project/tree/gui
 
 **Installation:**
 
-This software requires OpenCV2, TKinter, and Numpy to function properly.  Please see the relevant sites for
-installation instructions.
+We included a requirements.txt file so you to install all dependencies simply run
 
-You will need to be running Python 3.6 or later.
+```$ pip install -r requirements.txt ```
 
 **Runnning:**
 To run, simply call start main.
 
-Via terminal, inside the root directory of the repo:  ./main
+Via terminal, inside the root directory of the repo:  
+
+```$ ./main```
 
 **Usage:**
 First, you will need to select a file using the "open file" option.  Once a file has been loaded, you can
@@ -26,4 +27,6 @@ transformations done will either need to be undone yourself or the file reloaded
 
 Once you have transformed your image as desired, you can select the "save file" option to save the image
 and it's transformations as a separate file.
+
+Zooming: click on the zoom button to toggle zoom mode, then hover over the image and left click to zoom in and right click to zoom out
 
