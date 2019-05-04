@@ -467,7 +467,7 @@ def __interpolate_transform(image: np.array, x_coords: list, y_coords: list, map
         elif interpolation == INTER_NEAREST:
             # This one's easy, just find the closest points.
             rows, columns = image.shape
-            rounded_x, round_y = (round(mapped_y), round(mapped_x))
+            rounded_x, rounded_y = (round(mapped_y), round(mapped_x))
             # Ensure we don't go out of bounds.
             if rounded_x >= columns:
                 rounded_x = columns-1
