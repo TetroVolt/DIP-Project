@@ -1,0 +1,15 @@
+\subsection{Rotation}
+
+We rotate an image $I_{M\times N}$ around center $C=(c_x, c_y)$ by angle $\theta$ with scale factor $r$ by applying the affine transformation using \[A=\begin{bmatrix}\alpha & \beta & x_t\\-\beta & \alpha & y_t\end{bmatrix}\] where 
+\begin{align*}\alpha &= r\cos\theta\\
+               \beta &= r\sin\theta\\
+               x_t &= C\begin{bmatrix}1 - \alpha & -\beta\end{bmatrix}\\
+               y_t &= C\begin{bmatrix}\beta & 1 - \alpha\end{bmatrix}
+\end{align*}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.5]{images/lenna-rotation.jpg}
+    \caption{Rotation of $75^{\circ}$}
+    \label{fig:lenna-rotation}
+\end{figure}

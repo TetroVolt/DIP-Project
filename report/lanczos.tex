@@ -1,0 +1,30 @@
+\subsection{Lanczos} \label{subsec:lanczos4}
+
+The Lanczos interpolation of order $n$ is a function:
+
+\[L(x, n) =   \begin{cases}
+    \text{sinc}(x)\cdot\text{sinc}(\frac{x}{n}) & \text{for } |x|\leq n \\
+    0 & \text{otherwise}
+  \end{cases}\]
+
+where 
+
+\[\text{sinc}(x) =   \begin{cases}
+    1 & \text{for } x=0 \\
+    \frac{\sin{\pi x}}{\pi x} & \text{otherwise}
+  \end{cases}\]
+  
+To interpolate a two-dimensional image $I$, we define a filter weight $w$:
+
+\[w = \sum_{i=-n+1}^n\sum_{j=-n+1}^n L(i-x + \lfloor x\rfloor, n)\cdot L(j - y + \lfloor y\rfloor, n)\]
+
+and determine the intensity value of a pixel at $(x, y)$ with 
+
+\[I'(x,y)=\frac{1}{w}\sum_{i=-n+1}^n\sum_{j=-n+1}^n I(\lfloor x\rfloor + i, \lfloor y\rfloor + j)\cdot L(i-x + \lfloor x\rfloor, n)\cdot L(j-y + \lfloor y\rfloor, n)\]
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.5]{images/lenna-lanczos4.jpg}
+    \caption{Lanczos Interpolation of order 4 with scale $(\sqrt{2}, \sqrt{2})$}
+    \label{fig:lenna-lanczos4}
+\end{figure}

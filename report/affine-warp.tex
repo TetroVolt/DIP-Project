@@ -1,0 +1,7 @@
+\subsection{Affine Warp}
+
+An \textbf{Affine Transformation} is a transformation that preserves colinearity and ratios of distances: if $f$ is an affine transform and $p$ and $q$ are colinear points, then $f(p)$ and $f(q)$ are colinear and for any $w$ in the line containing $p$ and $q$, \[\frac{d(p, w)}{d(p,q)}=\frac{d(f(p), f(w))}{d(f(p),f(q))}\] Given an image $I_{M\times N}$ and a $2\times3$ matrix $A$, we transform the image $I$ as follows:
+
+\[I'(x, y) = I\left(A\begin{bmatrix}x \\ y \\ 1\end{bmatrix}\right)\]
+
+In particular, our choice of $A$ determines the type of affine transformation. 

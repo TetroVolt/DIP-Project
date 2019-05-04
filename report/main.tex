@@ -1,0 +1,81 @@
+\documentclass[a4paper]{article}
+
+%% Language and font encodings
+\usepackage[english]{babel}
+\usepackage{amsthm, amsfonts}
+\usepackage[utf8x]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{listings}
+\usepackage{algpseudocode, algorithm}
+\usepackage{mathtools}
+\usepackage{enumerate}
+\usepackage{tabu}
+\usepackage{xcolor}
+\usepackage{tikz, tikz-qtree}
+\usepackage{graphviz}
+\usepackage{subfig}
+\usepackage{blindtext}
+
+%% Sets page size and margins
+\usepackage[a4paper,top=3cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
+
+%% Useful packages
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage[colorinlistoftodos]{todonotes}
+\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+
+\newenvironment{solution}{\begin{proof}[\textnormal{\textbf{Solution}}]}{\end{proof}}
+\newenvironment{exercise}[1]{\begin{proof}[\textnormal{\textbf{Exercise #1:}}]\phantom{\qedhere}}{\end{proof}}
+\newenvironment{lemma}{\begin{proof}[\textnormal{\textbf{Lemma}}]\phantom{\qedhere}}{\end{proof}}
+
+\renewcommand\thesubfigure{\arabic{subfigure}}
+
+\begin{document}
+\begin{titlepage}\pagenumbering{gobble}
+	\centering
+	{\scshape\LARGE University of Houston\par}
+	\vspace{1cm}
+	{\scshape\Large Geometric Transformations of Images \par}
+	\vspace{1.5cm}
+	{\huge\bfseries COSC 4393 \par}
+	{\huge\bfseries Digital Image Processing\par}
+	\vspace{0.5cm}
+	{\large\bfseries Pranav Mantini\par}
+	\vspace{1cm}
+	{\Large\itshape \begin{tabular}{|c|}\hline 
+	                   \textcolor{blue}{\textbf{Wednesday}} \\\hline 
+	                   Khalid Hourani\\\hline
+	                   Conrad Parker\\\hline
+	                   Morris Smith\\\hline
+	                   Raymond Sutrisno\\\hline
+	                   Jackson Murrell\\\hline
+	                   Christian Wilson\\\hline
+	                   Willard Boss\\\hline
+	               \end{tabular}\par}
+	\vspace{0.5cm}
+	{\large \par} %date
+	\vfill
+% Bottom of the page
+\end{titlepage}
+
+\tableofcontents
+\newpage\pagenumbering{arabic}
+
+\input{introduction}
+
+\section{Geometric Transformations}
+\input{nearest-neighbor}
+\input{bilinear}
+\input{bicubic}
+\input{lanczos}
+\section{Affine Transformations}
+\input{affine-warp}
+\input{rotation}
+\input{shear}
+\input{fisheye}
+\input{perspective-warp}
+\section{Observations}
+\input{interpolation-methods}
+\input{perspective_observations.tex}
+\end{document}
