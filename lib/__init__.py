@@ -485,12 +485,6 @@ def __interpolate_transform(image: np.array, mapped_x: float, mapped_y: float,
             min_x, max_x = int(mapped_x), int(mapped_x)+1
             min_y, max_y = int(mapped_y), int(mapped_y)+1
 
-            top_left = (min_x, min_y)
-            top_right = (max_x, min_y)
-            
-            left_x, right_x = (x_coords[1], x_coords[2])
-            top_y, bottom_y = (y_coords[1], y_coords[2])
-
             # Get our two imaginary points for X value.
             r1 = __interpolate(max_x, mapped_x, min_x,
                                image[min_y, min_x], image[min_y, max_x])
@@ -658,7 +652,7 @@ def getPerspectiveTransform(src: np.array, dst: np.array, solveMethod=None) -> n
     return transform_matrix.reshape((3, 3))
 
 def warpPerspective(image, transform, dsize,
-                    flags=(INTER_LINEAR, 0), borderMode=BORDER_CONSTANT, borderValue=0):
+                    flags=INTER_LINEAR, borderMode=BORDER_CONSTANT, borderValue=0):
     """
         Creates a scaled and/or rotated version of an image using a set of 4 coordinate source points and
         4 coordinate destination points.  Straight lines remain straight during this process.  This takes
@@ -683,7 +677,7 @@ def warpPerspective(image, transform, dsize,
     if transform.shape != (3, 3):
         raise ValueError("Transform Matrix must be 3X3")
     rows, columns = image.shape
-    new_rows, new_columns = dsize
+    new_columns, new_rows = dsize
     # Initialize the image with the desired border value.  If we get a mapped value outside the image,
     # we would use this instead.  If BORDER_REPLICATE is desired, handle that below.
     output = np.full((new_rows, new_columns), borderValue, dtype = np.uint8)
@@ -698,20 +692,18 @@ def warpPerspective(image, transform, dsize,
             # and the pixel value would be obtained from the old image.
             # [new x] = [(M11 * x + M12 * y + M13)/(M31 * x + M32 * y + M33)]
             # [new y]   [(M21 * x + M22 * y + M23)/(M31 * x + M32 * y + M33)]
-            mapped_x = (transform[0, 0] * column + transform[0, 1] * row + transform[0, 2]) / \
-                       (transform[2, 0] * column + transform[2, 1] * row + transform[2, 2])
-            mapped_y = (transform[1, 0] * column + transform[1, 1] * row + transform[1, 2]) / \
-                       (transform[2, 0] * column + transform[2, 1] * row + transform[2, 2])
-            int_x = int(mapped_x)
-            int_y = int(mapped_y)
+
+            X, Y = column + 0.5, row + 0.5
+            mapped_x = (transform[0, 0] * X + transform[0, 1] * Y + transform[0, 2]) / \
+                       (transform[2, 0] * X + transform[2, 1] * Y + transform[2, 2])
+            mapped_y = (transform[1, 0] * X + transform[1, 1] * Y + transform[1, 2]) / \
+                       (transform[2, 0] * X + transform[2, 1] * Y + transform[2, 2])
 
             # Ensure we don't go out of bounds of the image.
             # If we go outside the bounds, the result will just be 0, as the image
             # was initialized with a border value.
             if mapped_x > 0 and mapped_y > 0 and mapped_x < columns and mapped_y < rows:
-                output[row, column] = __interpolate_transform(image, [int_x-1, int_x, int_x+1],
-                                                              [int_y-1, int_y, int_y+1], mapped_x, mapped_y,
-                                                              flags[0])
+                output[row, column] = __interpolate_transform(image, mapped_x, mapped_y, flags)
     return output
 
 def get_exports() -> dict:
