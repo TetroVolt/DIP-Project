@@ -43,10 +43,16 @@ def resize(src: np.array, dsize: Tuple[int, int],
         Returns:
             (:class: array):  A resized image based on the interpolation method specified.
     """
-    new_rows, new_columns = dsize
     rows, columns = src.shape
-    scale_y = float(new_rows) / rows
-    scale_x = float(new_columns) / columns
+    if dsize:
+        new_columns, new_rows = dsize
+        scale_y = float(new_rows) / rows
+        scale_x = float(new_columns) / columns
+    elif (scale_y is not None and scale_x is not None):
+        new_columns, new_rows = int(columns * scale_x), int(rows * scale_y)
+    else:
+        return src.copy()
+
     if interpolation ==  INTER_LINEAR:
         return __bilinear_interpolation(src, (scale_y, scale_x), (new_rows, new_columns))
 
@@ -58,7 +64,6 @@ def resize(src: np.array, dsize: Tuple[int, int],
 
     elif interpolation == INTER_LANCZOS4:
         return __lanczos4_interpolation(src, (scale_y, scale_x), (new_rows, new_columns))
-
 
 def __nearest_neighbor(image: np.array, scale: Tuple[float, float], size: Tuple[int, int]) -> np.array:
     """
@@ -88,19 +93,13 @@ def __nearest_neighbor(image: np.array, scale: Tuple[float, float], size: Tuple[
         for column_iter in range(0, new_columns):
             # Calculate where the closest point is on the old image based on the scale factor.
             # Then round that as appropriate.
-            nearest_x = round(column_iter / scale_x)
-            nearest_y = round(row_iter / scale_y)
-
-            # Santize the x value to be within bounds.
-            # If the actual value is 255.5 then it will round out of bounds.
-            if nearest_x >= columns:
-                nearest_x = columns-1
-
-            if nearest_y >= rows:
-                nearest_y = rows-1
+            X, Y = column_iter + 0.5, row_iter + 0.5
+            nearest_x = int(X / scale_x)
+            nearest_y = int(Y / scale_y)
 
             # Assign the image to the old image's position.
             new_image[row_iter, column_iter] = image[nearest_y, nearest_x]
+
     return new_image
 
 def __interpolate(right: int, mapped_val: float, left: int, pixel1: int, pixel2: int) -> float:
@@ -157,8 +156,8 @@ def __bilinear_interpolation(image: np.array, scale: Tuple[float, float], size: 
             # This will likely be a float, in which case we will need to
             # calculate the value.  If it is not, it maps exactly onto an
             # already existing pixel, so use that.
-            mapped_x = (column_iter +0.5)/ scale_x
-            mapped_y = (row_iter+0.5) / scale_y
+            mapped_x = (column_iter + 0.5)/ scale_x
+            mapped_y = (row_iter + 0.5) / scale_y
 
             # Get the coordinates for the top left most corner of the interpolation square,
             # and the rest can be deduced.
@@ -271,7 +270,7 @@ def __bicubic_interpolation(image: np.array, scale: Tuple[float, float], size: T
     padded_image = np.append(np.append(left_pad,padded_image, axis=1),right_pad, axis=1)
     # Pad top and bottom of image
     padded_image = np.append(np.append([padded_image[0],padded_image[0]],padded_image, axis=0),[padded_image[rows-1],padded_image[rows-1]], axis=0)
-    cv2.imwrite('padded.jpg', padded_image)
+    #cv2.imwrite('padded.jpg', padded_image)
 
     for row_iter in range(0, new_rows):
         for column_iter in range(0, new_columns):
@@ -434,8 +433,13 @@ def warpAffine(image: np.array, transform: np.array, size: Tuple[int, int], inte
     """
     if transform.shape != (2, 3):
         raise ValueError("Transform Matrix is the incorrect size.")
+
     rows, columns = image.shape
     output = np.zeros((rows, columns), dtype = np.uint8)
+
+    from numpy.linalg import inv
+    transform = np.vstack((transform, [[0,0,1]]))
+    transform = inv(transform)[:-1, :]
 
     for row in range(0, rows):
         for column in range(0, columns):
@@ -443,50 +447,44 @@ def warpAffine(image: np.array, transform: np.array, size: Tuple[int, int], inte
             # [x'] = [a b][x]+[t1] Where [a b t1] is the transform matrix.
             # [y']   [c d][y] [t2]       [c d t2]
 
-            mapped_x = transform[0, 0] * column + transform[0,1] * row + transform[0,2]
-            mapped_y = transform[1, 0] * column + transform[1,1] * row + transform[1,2]
-            int_x = int(mapped_x)
-            int_y = int(mapped_y)
+            X, Y = column + 0.5, row + 0.5
+            mapped_x = (transform[0, 0] * X + transform[0,1] * Y + transform[0,2])
+            mapped_y = (transform[1, 0] * X + transform[1,1] * Y + transform[1,2])
+            int_x, int_y = int(mapped_x), int(mapped_y)
+
             # Ensure we don't go out of bounds of the image.
             # If we go outside the bounds, the result will just be 0, as the image
             # was initialized with all zeroes.
             if 0 < mapped_x < columns and 0 < mapped_y < rows:
-                output[row, column] = __interpolate_transform(image, [int_x-1, int_x, int_x+1],
-                                                              [int_y-1, int_y, int_y+1], mapped_x, mapped_y,
-                                                              interpolation)
+                output[row, column] = __interpolate_transform(image, mapped_x, mapped_y, interpolation)
+
     return output
 
-def __interpolate_transform(image: np.array, x_coords: list, y_coords: list, mapped_x: float, mapped_y: float,
+def __interpolate_transform(image: np.array, mapped_x: float, mapped_y: float,
                             interpolation: int) -> int:
 
-        # If our mapped values correspond to actual pixels, use those.
-        if mapped_x.is_integer() and mapped_y.is_integer():
+        if interpolation == INTER_NEAREST:
+            # This one's easy, just find the closest points.
             return image[int(mapped_y), int(mapped_x)]
 
-        # If we get a mapped value that is not an exact coordinate, we need to interpolate.
-        elif interpolation == INTER_NEAREST:
-            # This one's easy, just find the closest points.
-            rows, columns = image.shape
-            rounded_x, rounded_y = (int(mapped_x + 0.5), int(mapped_x + 0.5))
-            # Ensure we don't go out of bounds.
-            if rounded_x >= columns:
-                rounded_x = columns-1
-            if rounded_y >= rows:
-                rounded_y = rows-1
-            return image[rounded_x, rounded_y]
-
         elif interpolation == INTER_LINEAR:
+            min_x, max_x = int(mapped_x), int(mapped_x)+1
+            min_y, max_y = int(mapped_y), int(mapped_y)+1
+
+            top_left = (min_x, min_y)
+            top_right = (max_x, min_y)
+            
             left_x, right_x = (x_coords[1], x_coords[2])
             top_y, bottom_y = (y_coords[1], y_coords[2])
 
             # Get our two imaginary points for X value.
-            r1 = __interpolate(right_x, mapped_x, left_x,
-                               image[top_y-1, left_x-1], image[top_y-1, left_x])
-            r2 = __interpolate(right_x, mapped_x, left_x,
-                               image[top_y, left_x-1], image[top_y, left_x])
+            r1 = __interpolate(max_x, mapped_x, min_x,
+                               image[min_y, min_x], image[min_y, max_x])
+            r2 = __interpolate(max_x, mapped_x, min_x,
+                               image[max_y, min_x], image[max_y, max_x])
 
             # Interpolate the Y value and assign it to the image.
-            return __interpolate(bottom_y, mapped_y, top_y, r1, r2)
+            return __interpolate(max_y, mapped_y, min_y, r1, r2)
 
         elif interpolation == INTER_CUBIC:
             # Matrix of 16 samples for cubic interpolation.

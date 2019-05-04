@@ -55,6 +55,7 @@ class ImageViewer(tk.Label):
         self.state.bound_bottom_right = self.np_photo.shape[::-1]
         self.photo = Image.fromarray(self.np_photo)
         self.photoTK = ImageTk.PhotoImage(self.photo)
+        self.configure(image=self.photoTK)
         #self.state = ImageViewer.State(self.np_photo.shape)
 
     def setInterpolation(self, inter):
@@ -155,6 +156,16 @@ class ImageViewer(tk.Label):
         self.state.set_default_homology(self.np_photo.shape)
         self.setImageFromNPArray(temp)
         self.configure(image=self.photoTK)
+
+    def resizeImage(self, fx, fy):
+        rows, cols = self.np_photo.shape
+        new_rows, new_cols = int(rows * fy), int(cols * fx)
+
+        temp = lib.resize(
+                        src=self.np_photo,
+                        dsize=(new_cols, new_rows),
+                        interpolation=self.state.interpolation)
+        self.setImageFromNPArray(temp)
 
     def paddedAffineTransform(self, mat: np.array):
         rows, cols = self.np_photo.shape

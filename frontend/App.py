@@ -207,11 +207,7 @@ class App(tk.Tk):
                 fx, fy = float(fx), float(fy)
             except:
                 return
-            mat = np.float32([
-                [fx, 0, 0],
-                [0, fy, 0]
-            ])
-            self.viewer.paddedAffineTransform(mat)
+            self.viewer.resizeImage(fx, fy)
             root.destroy()
 
         tk.Button(frame, text="done", command=doneAction).grid(row=2) # done button
@@ -232,6 +228,7 @@ class App(tk.Tk):
         root.attributes('-type', 'dialog')
         frame = ttk.Frame(root, padding=20)
         frame.grid()
+        tk.Label(frame, text="Rotation will be done about the last clicked pixel on the image\nEnter the amount in Degrees:").grid()
         deg_entry = tk.Entry(frame)
         deg_entry.grid()
 
@@ -250,6 +247,7 @@ class App(tk.Tk):
             root.destroy()
         done = tk.Button(frame, text="done", command=doneAction)
         done.grid()
+
 
     def affineButtonPressed(self):
         """
