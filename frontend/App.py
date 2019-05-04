@@ -192,15 +192,14 @@ class App(tk.Tk):
 
         root = tk.Tk()
         root.attributes('-type', 'dialog')
+
         frame = ttk.Frame(root, padding=20)
         frame.grid()
+
         fx_entry = tk.Entry(frame)
         fx_entry.grid(row=0, column=1)
         fy_entry = tk.Entry(frame)
         fy_entry.grid(row=1, column=1)
-
-        tk.Label(frame, "scale_x: ").grid(row=0)
-        tk.Label(frame, "scale_y: ").grid(row=1)
 
         def doneAction():
             fx, fy = fx_entry.get(), fy_entry.get()
@@ -214,8 +213,10 @@ class App(tk.Tk):
             ])
             self.viewer.paddedAffineTransform(mat)
             root.destroy()
-        done = tk.Button(frame, text="done", command=doneAction)
-        done.grid()
+
+        tk.Button(frame, text="done", command=doneAction).grid(row=2) # done button
+        tk.Label(frame, text="scale_x: ").grid(row=0)
+        tk.Label(frame, text="scale_y: ").grid(row=1)
 
     def rotateButtonPressed(self):
         """
