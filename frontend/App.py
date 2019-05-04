@@ -29,12 +29,6 @@ class App(tk.Tk):
             command=self.saveFileButtonPressed)
         self.openFileButton.grid(column=0)
 
-        # Dictionary with options
-        # Dictionary with options
-        # Dictionary with options
-        # Dictionary with options
-        # Dictionary with options
-        # Dictionary with options
         self.resizeButton = ttk.Button(
             self.frame,
             text="Resize",
@@ -83,7 +77,6 @@ class App(tk.Tk):
         self.interOptionMenu.grid(column=0)
         self.interOptionMenu.configure(state='disabled')
         self.interpolationMenu.trace('w',self.interpolationMenuChoice)
-
 
     def openFileButtonPressed(self):
         """
@@ -202,9 +195,12 @@ class App(tk.Tk):
         frame = ttk.Frame(root, padding=20)
         frame.grid()
         fx_entry = tk.Entry(frame)
-        fx_entry.grid()
+        fx_entry.grid(row=0, column=1)
         fy_entry = tk.Entry(frame)
-        fy_entry.grid()
+        fy_entry.grid(row=1, column=1)
+
+        tk.Label(frame, "scale_x: ").grid(row=0)
+        tk.Label(frame, "scale_y: ").grid(row=1)
 
         def doneAction():
             fx, fy = fx_entry.get(), fy_entry.get()

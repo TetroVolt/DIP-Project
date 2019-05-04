@@ -45,6 +45,7 @@ class ImageViewer(tk.Label):
         self.np_photo = np.array(self.photo)
         self.photoTK = ImageTk.PhotoImage(self.photo)
         self.state = ImageViewer.State(self.np_photo.shape)
+        self.zoomed_img = self.np_photo
         assert(len(self.np_photo.shape)==2)
 
     def setImageFromNPArray(self, nparray: np.ndarray):
@@ -70,36 +71,44 @@ class ImageViewer(tk.Label):
         MUST TRY TO DO THIS ASYNCHRONOUSLY
         """
         zoom_amt = self.state.zoom_amt
-        if zoom_amt == 1: return
-        label_h, label_w = self.np_photo.shape
+        if zoom_amt == 1: 
+            self.zoomed_img = self.np_photo
+        else:
+            label_h, label_w = self.np_photo.shape
 
-        zoom_w, zoom_h = label_w // zoom_amt, label_h // zoom_amt
-        if min(zoom_w, zoom_h) < 8: # ensure that lowest dimension is not less than 8 pixels
-            zoom_amt = self.state.zoom_amt = self.state.prev_zoom_amt
             zoom_w, zoom_h = label_w // zoom_amt, label_h // zoom_amt
+            if min(zoom_w, zoom_h) < 8: # ensure that lowest dimension is not less than 8 pixels
+                zoom_amt = self.state.zoom_amt = self.state.prev_zoom_amt
+                zoom_w, zoom_h = label_w // zoom_amt, label_h // zoom_amt
 
-        # check if x, y of mouse is within safe bounds
-        safe_min_x, safe_min_y = zoom_w // 2, zoom_h // 2
-        safe_max_x, safe_max_y = label_w - safe_min_x, label_h - safe_min_y
+            self.zoomed_img = lib.resize(
+                        src=self.np_photo,
+                        dsize=(label_w * self.state.zoom_amt, label_h * self.state.zoom_amt),
+                        interpolation=self.state.interpolation)
 
+    def display_zoom_picture(self):
         X,Y = self.state.x, self.state.y
-        X = min(max(safe_min_x, X), safe_max_x)
-        Y = min(max(safe_min_y, Y), safe_max_y)
-        temp =  self.np_photo[Y-safe_min_y:Y+safe_min_y,X-safe_min_x:X+safe_min_x]
-        temp = lib.resize(
-                src=temp,
-                dsize=(label_w, label_h),
-                interpolation=self.state.interpolation)
+        vp_rows, vp_cols = self.np_photo.shape # view port rows and cols
+        margin_vert, margin_horz = vp_rows // 2, vp_cols // 2
+
+        zoom_amt = self.state.zoom_amt
+        X *= zoom_amt
+        Y *= zoom_amt
+
+        X = max(margin_horz, min(X, zoom_amt*vp_cols - margin_horz))
+        Y = max(margin_vert, min(Y, zoom_amt*vp_rows - margin_vert))
+
+        temp = self.zoomed_img[Y-margin_vert:Y+margin_vert, X-margin_horz:X+margin_horz]
 
         self.photo = Image.fromarray(temp)
         self.photoTK = ImageTk.PhotoImage(self.photo)
         self.configure(image=self.photoTK)
 
     def mouseMotion(self, event):
-        self.state.x = event.x
-        self.state.y = event.y
-        self.recalculateImageBounds()
-
+        self.state.x, self.state.y = event.x, event.y
+        if self.state.zoom_mode:
+            self.display_zoom_picture()
+        
     def mouseEnter(self, event):
         pass
     
@@ -115,12 +124,14 @@ class ImageViewer(tk.Label):
             self.state.prev_zoom_amt = self.state.zoom_amt
             self.state.zoom_amt *= 2
         self.recalculateImageBounds()
+        self.display_zoom_picture()
     
     def mouseBtn3(self, event):
         if self.state.zoom_mode:
             self.state.prev_zoom_amt = self.state.zoom_amt
             self.state.zoom_amt = max(1,self.state.zoom_amt // 2)
         self.recalculateImageBounds()
+        self.display_zoom_picture()
 
     def saveImage(self, filename:str):
         import scipy.misc
