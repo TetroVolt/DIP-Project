@@ -168,8 +168,8 @@ def __bilinear_interpolation(image: np.array, scale: Tuple[float, float], size: 
             # Use the original image value if the mapped values correspond to an exact pixel.
             if mapped_x == left_x and mapped_y == top_y:
                 new_pixel = image[top_y, left_x]
-                row_counter = ceil(scale_x)
-                column_counter = ceil(scale_y)
+                row_counter = math.ceil(scale_x)
+                column_counter = math.ceil(scale_y)
 
             # Calculate the imaginary value.
             else:
@@ -447,54 +447,51 @@ def warpAffine(image: np.array, transform: np.array, size: Tuple[int, int], inte
             mapped_y = transform[1, 0] * column + transform[1,1] * row + transform[1,2]
             int_x = int(mapped_x)
             int_y = int(mapped_y)
-
             # Ensure we don't go out of bounds of the image.
             # If we go outside the bounds, the result will just be 0, as the image
             # was initialized with all zeroes.
             if 0 < mapped_x < columns and 0 < mapped_y < rows:
-
-                # If our mapped values correspond to actual pixels, use those.
-                if mapped_x.is_integer() and mapped_y.is_integer():
-                    output[row, column] = image[int_y, int_x]
-
-                # If we get a mapped value that is not an exact coordinate, we need to interpolate.
-                elif interpolation == INTER_NEAREST:
-                    # This one's easy, just find the closest points.
-                    output[row, column] = image[int(round(mapped_y)), int(round(mapped_x))]
-
-                elif interpolation == INTER_LINEAR:
-                    left_x, right_x = int_x, int_x+1
-                    top_y, bottom_y = int_y, int_y+1
-
-                    # Get our two imaginary points for X value.
-                    r1 = __interpolate(right_x, mapped_x, left_x,
-                                       image[top_y-1, left_x-1], image[top_y-1, left_x])
-                    r2 = __interpolate(right_x, mapped_x, left_x,
-                                       image[top_y, left_x-1], image[top_y, left_x])
-
-                    # Interpolate the Y value and assign it to the image.
-                    output[row, column] = __interpolate(bottom_y, mapped_y, top_y, r1, r2)
-
-                elif interpolation == INTER_CUBIC:
-                    # Matrix of 16 samples for cubic interpolation.
-                    x_coord = [int_x-1,int_x,int_x+1,int_x+2]
-                    y_coord = [int_y-1,int_y,int_y+1,int_y+2]
-
-                    r1 = __warp_cubic(x_coord, y_coord[0], image, mapped_x)
-
-                    r2 = __warp_cubic(x_coord, y_coord[1], image, mapped_x)
-
-                    r3 = __warp_cubic(x_coord, y_coord[2], image, mapped_x)
-
-                    r4 = __warp_cubic(x_coord, y_coord[3], image, mapped_x)
-
-                    new_pixel = __cubic_interpolation(y_coord, [r1,r2,r3,r4], mapped_y)
-
-                    new_pixel = 0 if new_pixel < 0 else 255 if new_pixel > 255 else new_pixel
-
-                    output[row, column] = new_pixel
-
+                output[row, column] = __interpolate_transform(image, [int_x-1, int_x, int_x+1],
+                                                              [int_y-1, int_y, int_y+1])
     return output
+
+def __interpolate_transform(image, x_coords, y_coords, mapped_x, mapped_y, interpolation): -> int
+
+        # If our mapped values correspond to actual pixels, use those.
+        if mapped_x.is_integer() and mapped_y.is_integer():
+            return image[int_y, int_x]
+
+        # If we get a mapped value that is not an exact coordinate, we need to interpolate.
+        elif interpolation == INTER_NEAREST:
+            # This one's easy, just find the closest points.
+            return image[(int(round(mapped_y)), int(round(mapped_x)))]
+
+        elif interpolation == INTER_LINEAR:
+            left_x, right_x = (x_coords[1], x_coords[2])
+            top_y, bottom_y = (y_coord[1], y_coords[2])
+
+            # Get our two imaginary points for X value.
+            r1 = __interpolate(right_x, mapped_x, left_x,
+                               image[top_y-1, left_x-1], image[top_y-1, left_x])
+            r2 = __interpolate(right_x, mapped_x, left_x,
+                               image[top_y, left_x-1], image[top_y, left_x])
+
+            # Interpolate the Y value and assign it to the image.
+            return __interpolate(bottom_y, mapped_y, top_y, r1, r2)
+
+        elif interpolation == INTER_CUBIC:
+            # Matrix of 16 samples for cubic interpolation.
+            r1 = __warp_cubic(x_coords, y_coords[0], image, mapped_x)
+
+            r2 = __warp_cubic(x_coords, y_coords[1], image, mapped_x)
+
+            r3 = __warp_cubic(x_coords, y_coords[2], image, mapped_x)
+
+            r4 = __warp_cubic(x_coords, y_coords[3], image, mapped_x)
+
+            new_pixel = __cubic_interpolation(y_coords, [r1,r2,r3,r4], mapped_y)
+
+            return 0 if new_pixel < 0 else 255 if new_pixel > 255 else new_pixel
 
 def getRotationMatrix2D(center: Tuple[float, float], angle: float, scale: float, radians: bool=False) -> np.array:
     """
@@ -687,47 +684,8 @@ def warpPerspective(image, transform, dsize,
             # If we go outside the bounds, the result will just be 0, as the image
             # was initialized with a border value.
             if mapped_x > 0 and mapped_y > 0 and mapped_x < columns and mapped_y < rows:
-                # If our mapped values correspond to actual pixels, use those.
-                if mapped_x.is_integer() and mapped_y.is_integer():
-                    output[row, column] = image[int_x, int_y]
-
-                # If we get a mapped value that is not an exact coordinate, we need to interpolate.
-                elif flags[0] == INTER_LINEAR:
-                    # This one's easy, just find the closest points.
-                    output[row, column] = image[int(round(mapped_y)), int(round(mapped_x))]
-
-                elif flags[0] == INTER_LINEAR:
-                    left_x, right_x = int_x, int_x+1
-                    top_y, bottom_y = int_y, int_y+1
-
-                    # Get our two imaginary points for X value.
-                    r1 = __interpolate(right_x, mapped_x, left_x,
-                                       image[top_y-1, left_x-1], image[top_y-1, left_x])
-                    r2 = __interpolate(right_x, mapped_x, left_x,
-                                       image[top_y, left_x-1], image[top_y, left_x])
-
-                    # Interpolate the Y value and assign it to the image.
-                    output[row, column] = __interpolate(bottom_y, mapped_y, top_y, r1, r2)
-
-                elif flags[0] == INTER_CUBIC:
-                    # Matrix of 16 samples for cubic interpolation.
-                    x_coord = [int_x-1,int_x,int_x+1,int_x+2]
-                    y_coord = [int_y-1,int_y,int_y+1,int_y+2]
-
-                    r1 = __warp_cubic(x_coord, y_coord[0], image, mapped_x)
-
-                    r2 = __warp_cubic(x_coord, y_coord[1], image, mapped_x)
-
-                    r3 = __warp_cubic(x_coord, y_coord[2], image, mapped_x)
-
-                    r4 = __warp_cubic(x_coord, y_coord[3], image, mapped_x)
-
-                    new_pixel = __cubic_interpolation(y_coord, [r1,r2,r3,r4], mapped_y)
-
-                    new_pixel = 0 if new_pixel < 0 else 255 if new_pixel > 255 else new_pixel
-
-                    output[row, column] = new_pixel
-
+                output[row, column] = __interpolate_transform(image, [int_x-1, int_x, int_x+1],
+                                                              [int_y-1, int_y, int_y+1])
     return output
 
 def get_exports() -> dict:

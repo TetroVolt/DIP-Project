@@ -12,6 +12,8 @@ gui status : [![CircleCI](https://circleci.com/gh/TetroVolt/DIP-Project/tree/gui
 This software requires OpenCV2, TKinter, and Numpy to function properly.  Please see the relevant sites for
 installation instructions.
 
+You will need to be running Python 3.6 or later.
+
 **Runnning:**
 To run, simply call start main.
 
