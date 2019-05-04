@@ -452,14 +452,16 @@ def warpAffine(image: np.array, transform: np.array, size: Tuple[int, int], inte
             # was initialized with all zeroes.
             if 0 < mapped_x < columns and 0 < mapped_y < rows:
                 output[row, column] = __interpolate_transform(image, [int_x-1, int_x, int_x+1],
-                                                              [int_y-1, int_y, int_y+1])
+                                                              [int_y-1, int_y, int_y+1], mapped_x, mapped_y,
+                                                              interpolation)
     return output
 
-def __interpolate_transform(image, x_coords, y_coords, mapped_x, mapped_y, interpolation): -> int
+def __interpolate_transform(image: np.array, x_coords: list, y_coords: list, mapped_x: float, mapped_y: float, 
+                            interpolation: int) -> int:
 
         # If our mapped values correspond to actual pixels, use those.
         if mapped_x.is_integer() and mapped_y.is_integer():
-            return image[int_y, int_x]
+            return image[int(mapped_y), int(mapped_x)]
 
         # If we get a mapped value that is not an exact coordinate, we need to interpolate.
         elif interpolation == INTER_NEAREST:
@@ -468,7 +470,7 @@ def __interpolate_transform(image, x_coords, y_coords, mapped_x, mapped_y, inter
 
         elif interpolation == INTER_LINEAR:
             left_x, right_x = (x_coords[1], x_coords[2])
-            top_y, bottom_y = (y_coord[1], y_coords[2])
+            top_y, bottom_y = (y_coords[1], y_coords[2])
 
             # Get our two imaginary points for X value.
             r1 = __interpolate(right_x, mapped_x, left_x,
@@ -685,7 +687,8 @@ def warpPerspective(image, transform, dsize,
             # was initialized with a border value.
             if mapped_x > 0 and mapped_y > 0 and mapped_x < columns and mapped_y < rows:
                 output[row, column] = __interpolate_transform(image, [int_x-1, int_x, int_x+1],
-                                                              [int_y-1, int_y, int_y+1])
+                                                              [int_y-1, int_y, int_y+1], mapped_x, mapped_y,
+                                                              flags[0])
     return output
 
 def get_exports() -> dict:
