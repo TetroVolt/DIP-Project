@@ -456,7 +456,7 @@ def warpAffine(image: np.array, transform: np.array, size: Tuple[int, int], inte
                                                               interpolation)
     return output
 
-def __interpolate_transform(image: np.array, x_coords: list, y_coords: list, mapped_x: float, mapped_y: float, 
+def __interpolate_transform(image: np.array, x_coords: list, y_coords: list, mapped_x: float, mapped_y: float,
                             interpolation: int) -> int:
 
         # If our mapped values correspond to actual pixels, use those.
@@ -466,7 +466,14 @@ def __interpolate_transform(image: np.array, x_coords: list, y_coords: list, map
         # If we get a mapped value that is not an exact coordinate, we need to interpolate.
         elif interpolation == INTER_NEAREST:
             # This one's easy, just find the closest points.
-            return image[(int(round(mapped_y)), int(round(mapped_x)))]
+            rows, columns = image.shape
+            rounded_x, round_y = (round(mapped_y), round(mapped_x))
+            # Ensure we don't go out of bounds.
+            if rounded_x >= columns:
+                rounded_x = columns-1
+            if rounded_y >= rows:
+                rounded_y = rows-1
+            return image[rounded_x, rounded_y]
 
         elif interpolation == INTER_LINEAR:
             left_x, right_x = (x_coords[1], x_coords[2])
