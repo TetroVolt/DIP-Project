@@ -411,6 +411,19 @@ def __warp_cubic(x_array, y_coord, image, x):
 
     return __cubic_interpolation(x_array, intensity_array, x)
 
+def getAffineTransform(src, dst):
+    assert(len(src) == len(dst) == 3)
+    assert(len(src[0]) == len(dst[0]) == 2)
+
+    src = np.hstack((src, [[1],[1],[1]]))
+    dst = np.hstack((dst, [[1],[1],[1]]))
+
+    from numpy.linalg import solve
+    Mt = solve(src, dst)
+    M = np.transpose(Mt)
+
+    return M[:-1,:]
+
 def warpAffine(image: np.array, transform: np.array, size: Tuple[int, int], interpolation: int) -> np.array:
     """
         Apply the affine transformation to an image given a 2x3 transformation matrix.
@@ -435,14 +448,15 @@ def warpAffine(image: np.array, transform: np.array, size: Tuple[int, int], inte
         raise ValueError("Transform Matrix is the incorrect size.")
 
     rows, columns = image.shape
-    output = np.zeros((rows, columns), dtype = np.uint8)
+    output_columns, output_rows = size
+    output = np.zeros((output_rows, output_columns), dtype = np.uint8)
 
     from numpy.linalg import inv
     transform = np.vstack((transform, [[0,0,1]]))
     transform = inv(transform)[:-1, :]
 
-    for row in range(0, rows):
-        for column in range(0, columns):
+    for row in range(0, output_rows):
+        for column in range(0, output_columns):
             # Formula used:
             # [x'] = [a b][x]+[t1] Where [a b t1] is the transform matrix.
             # [y']   [c d][y] [t2]       [c d t2]
@@ -488,6 +502,10 @@ def __interpolate_transform(image: np.array, mapped_x: float, mapped_y: float,
 
         elif interpolation == INTER_CUBIC:
             # Matrix of 16 samples for cubic interpolation.
+            int_x, int_y = int(mapped_x), int(mapped_y)
+            x_coords = [int_x-1, int_x, int_x+1, int_x+2]
+            y_coords = [int_y-1, int_y, int_y+1, int_y+2]
+            
             r1 = __warp_cubic(x_coords, y_coords[0], image, mapped_x)
 
             r2 = __warp_cubic(x_coords, y_coords[1], image, mapped_x)

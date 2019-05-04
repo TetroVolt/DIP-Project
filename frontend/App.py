@@ -151,7 +151,7 @@ class App(tk.Tk):
         pt3_final.grid(row=3, column=2)
         pt4_start.grid(row=4, column=0)
         pt4_final.grid(row=4, column=2)
-        tk.Label(frame, text="enter 4 points before and after transform\npoints given in form: num,num").grid(row=0, column=0)
+        tk.Label(frame, text="enter 4 points before and after transform\npoints given in form: X,Y").grid(row=0, column=0)
         tk.Label(frame, text=">").grid(row=2, column=1)
 
         def doneAction():
@@ -280,7 +280,7 @@ class App(tk.Tk):
         pt2_final.grid(row=2, column=2)
         pt3_start.grid(row=3, column=0)
         pt3_final.grid(row=3, column=2)
-        tk.Label(frame, text="enter 3 points before and after transform\npoints given in form: num,num").grid(row=0, column=0)
+        tk.Label(frame, text="enter 3 points before and after transform\npoints given in form: X,Y").grid(row=0, column=0)
         tk.Label(frame, text=">").grid(row=2, column=1)
 
         def doneAction():
@@ -299,7 +299,9 @@ class App(tk.Tk):
             pt1_s, pt2_s, pt3_s, pt1_f, pt2_f, pt3_f = pts
             start = np.float32([pt1_s, pt2_s, pt3_s])
             end = np.float32([pt1_f, pt2_f, pt3_f])
+
             mat = lib.getAffineTransform(start, end)
+
             if self.viewer.state.affinepad:
                 self.viewer.paddedAffineTransform(mat)
             else:
